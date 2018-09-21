@@ -1,0 +1,913 @@
+---
+title: "lecture_03"
+author: "JJ"
+date: "2018년 9월 6일"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+```{r}
+#8.R 함수작성
+#실질적으로는 패키지의 함수를 많이 사용하지만 파생변수를 만들기 위해서는 만들 필요가 있다. 잘 알아두면 매우 좋음.
+
+#Hello world!를 출력하는 함수
+say.hello<-function(){
+  print("Hello world!!")#메세지 출력 부분
+}
+
+#Hello world! 출력
+say.hello()
+
+##함수인자
+#하나의 치환
+sprintf("Hello %s", "Jared")
+
+#2개의 치환
+sprintf("Hello %s, today is %s", "Jared", "Sunday")
+
+#사람의 이름을 입력 받아 인사를 출력하는 함수
+hello.person<-function(name){
+  print(sprintf("Hello %s", name))#name에 이름을 입력받음.
+}
+
+hello.person("Jared")
+
+hello.person("Bob")
+
+hello.person("Sarah")
+
+
+###디폴트 인자
+hello_person <- function(first, last = "Doe") {
+  print(sprintf("Hello %s %s", first, last))
+}
+
+hello_person("Jared")  
+hello_person("Jared", "Lander")
+
+###부가 인자들
+hello_person("Jared", extra="Goodbye")
+
+hello_person("Jared", "Lander", "Goodbye")
+
+hello_person <- function(first, last="Doe", ...) {
+  print(sprintf("Hello %s %s", first, last))
+}
+
+hello_person("Jared", "Lander", "Goodbye")
+
+hello_person <- function(first, last) {
+  print(sprintf("Hello %s %s", first, last))
+}
+
+hello_person("Jared", "Lander")
+hello_person(first="Jared", last="Lander")
+
+hello_person(last = "Lander", first = "Jared")
+
+hello_person("Jared", last = "Lander")
+hello_person(first = "Jared", "Lander")
+
+hello_person(last = "Lander", "Jared")
+hello_person(fir="Jared", l="Lander")
+
+##반환값
+double.num <- function(x) {
+  x * 2
+}
+double.num(5)
+
+double.num <- function(x) {
+  return(x * 2)
+}
+double.num(5)
+
+double.num <- function(x) {
+  return(x * 2)
+  
+  print("Hello!")
+  return(17)
+}
+
+double.num(5)
+
+
+##do.call
+do.call("hello_person", args=list(first= "Jared", last = "Lander"))
+do.call(hello_person, args=list(first = "Jared", last = "Lander"))
+
+run.this <- function(x, func=mean) {
+  do.call(func, args = list(x))
+}
+
+run.this(1:10)
+run.this(1:10, mean)
+run.this(1:10, sum)
+run.this(1:10, sd)
+
+
+#9.R제어문
+as.numeric(TRUE)
+
+as.numeric(FALSE)
+
+1==1
+
+1<1
+
+1<=1
+
+1>1
+
+1>=1
+
+1!=1
+
+#1을 변수에 저장
+toCheck<-1
+
+#toCheck값이 1이면 hello출력
+if(toCheck==1){
+  print("hello")
+}
+
+if(toCheck==0){
+  print("hello")
+}
+
+check.bool<-function(x){
+  if(x==1){
+    #인자가 1인 경우에는 hello를 출력
+    print("hello")
+  }else{
+    #그렇지 않으면 goodbye를 출력한다.
+    print("goodbye")
+      }
+}
+
+check.bool(1)
+
+check.bool(0)
+
+check.bool("k")
+
+check.bool(TRUE)
+
+check.bool<-function(x){
+  if(x==1){
+    #입력값이 1과 같으면 hello를 출력
+    print("hello")
+  }else if(x==0){
+    #0과 같으면 goodbye를 출력
+    print("goodbye")
+  }else{
+    #그 나머지 경우는 confused를 출력
+    print("confused")
+  }
+}
+
+check.bool(1)
+
+check.bool(0)
+
+check.bool("k")
+
+check.bool(TRUE)
+
+use.switch<-function(x){
+  switch (x,
+          "a"="first",
+          "b"="second",
+          "z"="last",
+          "c"="third",
+          "other"
+  )
+}
+
+use.switch("a")
+use.switch("b")
+use.switch("c")
+use.switch("d")
+use.switch("e")
+
+#숫자를 주게 되면 위치에 있는 값을 준다.
+use.switch(1)
+use.switch(2)
+use.switch(3)
+use.switch(4)
+use.switch(5)
+use.switch(6)
+is.null(use.switch(6))
+
+##ifelse
+#1과1이 같은지 확인
+ifelse(1==1, "Yes", "No")
+
+#1과 0이 같은지 확인
+ifelse(1==0, "Yes", "No")
+
+toTest<-c(1,1,0,1,0,1)
+
+ifelse(toTest==1,"Yes","No")
+
+ifelse(toTest==1,toTest*3,toTest)
+
+#기본적인 연산은 벡터연산이기 때문에 자료형을 맞춰주기위해
+#모두 문자형으로 출력한다.
+ifelse(toTest==1,toTest*3,"Zero")
+
+toTest[2]<-NA
+
+ifelse(toTest==1,"Yes","No")
+
+ifelse(toTest==1,toTest*3,toTest)
+
+ifelse(toTest==1,toTest*3,"Zero")
+
+##복합테스트
+a<-c(1,1,0,1)
+
+b<-c(2,1,0,1)
+
+#다음은 벡터 a와 b를 요소 대 요소로 비교한다.
+ifelse(a==1&b==1,"Yes","No")
+
+#a와 b의 첫번째 요소만을 비교한다.
+ifelse(a==1&&b==1,"Yes","No")
+
+#and가 or보다 우선이다.
+
+#10.루프, for, while
+
+##for 루프 
+for(i in seq(1,10,2)){
+  print(i)
+}
+
+print(1:10)
+
+#과일 이름을 가진 벡터
+fruit<-c("apple", "banana","pomegranate")
+#길이를 저장할 변수를 만듦, 처음에는 NA 할당
+fruitLength<-rep(NA,length(fruit))
+
+fruitLength
+
+names(fruitLength)<-fruit
+
+fruitLength
+
+for(a in fruit){
+  fruitLength[a]<-nchar(a)
+  }
+
+fruitLength
+
+#벡터연산을 활용하는 예시
+fruitLength2<-nchar(fruit)
+
+names(fruitLength2)<-fruit
+
+fruitLength2
+
+identical(fruitLength,fruitLength2)
+
+##while 루프
+x<-1
+while(x<=5){
+  print(x)
+  x<-x+1
+}
+
+for(i in 1:10){
+  if(i==3){
+    next
+  }
+  print(i)
+}
+
+for(i in 1:10){
+  if(i==4){
+    break
+  }
+  print(i)
+}
+##결론
+#벡터화나 행렬 연산을 사용할 수 있으면 루프사용을 자제하는 것이 좋다. R에서는 중첩 루프는 아주 느리게 처리되기 때문이다.
+
+#11.그룹별 데이터 조작
+##apply패밀리
+#행렬만 사용할 수 있는 함수이다.
+#첫번째 인자는 객체, 두번째는 함수를 적용시킬 마진, 세번쨰는 적용 함수다.
+
+#행렬 만들기
+theMatrix<-matrix(1:9, nrow=3)
+
+#행에 대한 합
+apply(theMatrix,1,sum)
+
+#열에 대한 합
+apply(theMatrix,2,sum)
+
+#rowSums, colSums를 통한 계산
+rowSums(theMatrix)
+
+colSums(theMatrix)
+
+theMatrix[2,1]<-NA
+
+apply(theMatrix, 1, sum)
+
+#3개의 인자와 ...의 엑스트라 
+apply(theMatrix, 1, sum, na.rm=TRUE)
+
+rowSums(theMatrix)
+
+rowSums(theMatrix,na.rm = T)
+
+###lapply와 sapply
+#lapply는 리스트로 반환, sapply는 벡터로 반환
+theList <- list(A=matrix(1:9, 3), B=1:5, C=matrix(1:4, 2), D=2)
+theList
+
+lapply(theList, sum)
+
+sapply(theList, mean)
+sapply(theList, sum)
+
+theNames <- c("Jared", "Deb", "Paul")
+lapply(theNames, nchar)
+sapply(theNames, nchar)
+
+###mapply함수
+#여러 개의 리스트를 대상으로 함수를 적용한다.
+firstList <- list(A=matrix(1:16, 4), B=matrix(1:16, 2), C=1:5)
+secondList <- list(A=matrix(1:16, 4), B=matrix(1:16, 8), C=15:1)
+
+mapply(identical, firstList, secondList)
+
+simpleFunc <- function(x, y) {
+  NROW(x) + NROW(y)
+}
+
+mapply(simpleFunc, firstList, secondList)
+
+##집계
+data(diamonds, package = "ggplot2")
+
+head(diamonds)
+
+aggregate(price~cut, diamonds, mean)
+
+aggregate(price~cut+color, diamonds, mean)
+
+#c로 묶지 않고 cbind를 사용해서 DF형태로 만든다.
+aggregate(cbind(price,carat)~cut+color, diamonds, mean)
+
+library(plyr)
+head(baseball)
+
+#[]을 사용하여 서브세팅을 한다. ifelse보다 빠르다.
+baseball$sf[baseball$year<1954]<-0
+
+#확인
+any(is.na(baseball$sf))
+
+baseball$hbp[is.na(baseball$hbp)]<-0
+#확인
+any(is.na(baseball$hbp))
+#50타석 미만 선수는 제
+baseball<-baseball[baseball$ab>=50,]
+
+#출루율 계산
+baseball$OBP<-with(baseball,(h+bb+hbp)/(ab+bb+hbp+sf))
+#with 함수를 통해 $칼럼명을 하지 않아도 됨.
+tail(baseball)
+
+library(plyr)
+#출루율 계산 함수
+obp<-function(data){
+  c(OBP=with(data, sum(h+bb+hbp)/sum(ab+bb+hbp+sf)))
+}
+
+#ddply함수를 사용해 선수별 경력 기간 동안의 출류율을 계산한다.
+careerOBP<-ddply(baseball, .variables = "id",.fun=obp)
+
+careerOBP<-careerOBP[order(careerOBP$OBP, decreasing = TRUE),]
+
+head(careerOBP, 10)
+
+##llply 중요도 떨어짐
+theList <- list(A=matrix(1:9, 3), B=1:5, C=matrix(1:4, 2), D=2)
+lapply(theList, sum)
+
+llply(theList, sum)
+
+identical(lapply(theList, sum), llply(theList, sum))
+
+sapply(theList, sum)
+laply(theList, sum)
+
+##plyr헬퍼 함수
+data(diamonds, package = "ggplot2")
+
+aggregate(price ~ cut, diamonds, each(mean, median))
+
+system.time(dlply(baseball, "id", nrow))
+
+iBaseball <- idata.frame(baseball)
+system.time(dlply(iBaseball, "id", nrow))
+
+##data.table
+
+library(data.table)
+
+theDF <- data.frame(A=1:10,
+                    B=letters[1:10],
+                    C=LETTERS[11:20],
+                    D=rep(c("One", "Two", "Three"), length.out = 10))
+theDT <- data.table(A=1:10,
+                    B=letters[1:10],
+                    C=LETTERS[11:20],
+                    D=rep(c("One", "Two", "Three"), length.out = 10))
+
+theDF
+theDT
+#데이터 프레임은 팩터형이 초기설정이지만 데이터 테이블은 별도의 언급이 있지 않은 이상 팩터형이 기본이 아니다.
+
+class(theDF$B)
+class(theDT$B)
+
+diamondsDT <- data.table(diamonds)
+diamondsDT
+
+theDT[1:2,]
+
+#효율적인 코드가 아니다.
+theDT[theDT$A >= 7,]
+#$없이도 접근 가능
+theDT[A >=7,]
+
+#데이터 프레임의 경우c()와 ""를 활용해서 칼럼을 선택한다.
+theDT[, list(A, C)]
+#하나의 칼럼에 접근하는 경우
+theDT[, B]
+
+theDT[, list(B)]
+
+#열 이름을 문자열로 줘야하는 경우 with 옵션을 꼭 FALSE로 설정해야되기 때문에 불편하다. 현업에서 별로 안 쓴다는데...
+theDT[, "B", with=FALSE]
+
+theDT[, c("A", "C"), with=FALSE]
+theCols <- c("A", "C")
+theDT[, theCols, with=FALSE]
+
+###키 중요도 떨어짐...
+#테이블 살펴보기
+tables()
+
+setkey(theDT, D)
+theDT
+
+key(theDT)
+tables()
+
+theDT["One",]
+
+theDT[c("One", "Two"), ]
+
+setkey(diamondsDT, cut, color)
+
+diamondsDT[J("Ideal", "E"), ]
+
+diamondsDT[J("Ideal", c("E", "D")), ]
+
+###데이터 테이블 집계(중요도 떨어짐?)
+
+aggregate(price ~ cut, diamonds, mean)
+
+diamondsDT[, mean(price), by=cut]
+
+diamondsDT[, list(price=mean(price)), by = cut]
+
+diamondsDT[, list(price=mean(price)), by=list(cut, color)]
+
+diamondsDT[, list(price=mean(price), carat=mean(carat)), by=cut]
+diamondsDT[, list(price=mean(price), carat=mean(carat),
+                  caratSum=sum(carat)), by = cut]
+
+diamondsDT[, list(price=mean(price), carat=mean(carat)), 
+           by=list(cut, color)]
+###사실상 현업에서는 각 기업의 효율적인 알고리즘이 엔지니어에 의해 개발되었다. 여기서 배우는 다양한 데이터 처리 방법은 엔지니어의 도움없이 스스로 어느정도 수준의 데이터 처리를 하고자 할 때 사용하는 것이다. 너무 깊이 알 필요없고 엔지니어든 사이언티스든 기본적인 수준만 파악해도 무방하다.
+
+#12.dplyr 패키지
+##파이프는 해당 패키지에서 중요한 편이다.
+library(magrittr)
+data(diamonds, package = "ggplot2")
+dim(head(diamonds, n=4))
+
+##tbl
+class(diamonds)
+diamonds
+
+head(diamonds)
+
+############################너무 중요함####################################
+library(dplyr)
+head(diamonds)
+diamonds
+
+##select
+select(diamonds, carat, price)#테이블, 칼럼, 칼럼
+
+diamonds %>% 
+  select(carat, price)
+
+diamonds %>% 
+  select(c(carat, price))
+
+#인용(쿼테이션 마크)가 붙어 있으면 select_를 사용한다.
+diamonds %>% 
+  select_("carat", "price")
+
+theCols<-c('carat', 'price')
+
+diamonds %>% select_(.dots = theCols)
+#select_대신 권장 사항으로 one_of를 추천
+diamonds %>% 
+  select(one_of('carat', 'price'))
+
+diamonds %>% 
+  select(one_of(theCols))
+
+diamonds[,c('carat','price')]
+#위치를 통한 출력도 가능하다.
+select(diamonds,1,7)
+
+#굉장히 유용한고 편리한 기능!!
+diamonds %>% 
+  select(starts_with("c"))
+
+diamonds %>% 
+  select(ends_with("e"))
+
+diamonds %>% 
+  select(contains("l"))
+
+#정규 표현식을 갖고 검색할 때는 matches라는 함수를 사용한다.
+diamonds %>% 
+  select(matches("r.+t"))
+
+#-를 붙이면 해당 열은 제외한다.
+diamonds %>% 
+  select(-carat, -price)
+
+diamonds %>% 
+  select(-c(carat, price))
+
+diamonds %>% 
+  select(-1, -7)
+
+diamonds %>% 
+  select(-c(1, 7))
+
+diamonds %>% 
+  select_(.dots=c("-carat", "-price"))
+
+diamonds %>% 
+  select(-one_of("carat", "price"))
+
+#filter 특정 행을 선택할 때, 튜플 안의 내용을 본다?
+diamonds %>% 
+  filter(cut == "Ideal")
+
+diamonds[diamonds$cut == "Ideal",]
+
+diamonds %>% 
+  filter(cut %in% c("Ideal", "Good"))
+
+diamonds %>% 
+  filter(price >= 1000)
+
+diamonds %>% 
+  filter(price != 1000)
+
+diamonds %>% 
+  filter(carat > 2, price < 14000)
+
+diamonds %>% 
+  filter(carat > 2 & price < 14000)
+
+diamonds %>% 
+  filter(carat < 1 | carat > 5)
+#인용의 경우 _가 필요하다.
+diamonds %>% 
+  filter_("cut == 'Ideal'")
+
+diamonds %>% 
+  filter_(~cut == "Ideal")
+
+theCut <- "Ideal"
+diamonds %>% 
+  filter_(~cut == theCut)
+
+theCol <- "cut"
+theCut <- "Ideal"
+
+#대입하는 경우 
+diamonds %>% 
+  filter_(sprintf("%s == '%s'", theCol, theCut))
+
+library(lazyeval)
+
+interp(~ a == b, a = as.name(theCol), b = theCut)
+
+diamonds %>% 
+  filter_(interp(~ a == b, a = as.name(theCol), b = theCut))
+
+diamonds %>% 
+  filter(UQE(as.name(theCol)) == theCut)
+
+##mutate
+diamonds %>% mutate(price/carat)
+
+diamonds %>% select(carat, price) %>% mutate(price/carat)
+
+diamonds %>% select(carat, price) %>% mutate(Ratio=price/carat)
+
+diamonds %>% select(carat, price) %>% mutate(Ratio=price/carat, Double=Ratio*2)
+#변경된 내용을 저장하기 위해서는 변수에 할당하는 과정이 필요하다.
+
+##summarize 여러 요소가 있는 벡터를 받아 길이 1인 결과로 반환하는 함수들을 열들에 적용한다.
+
+summarise(diamonds, mean(price))
+
+diamonds %>% summarise(mean(price))
+
+diamonds %>%
+  summarise(AvgPrice=mean(price),
+            MedianPrice=median(price),
+            AvgCarat=mean(carat)
+            )
+
+##group_by
+#group_by와 summarize를 같이 사용하는 것은 aggregate를 사용하는 것보다 훨씬 간략하고 편해질 수 있다.
+
+diamonds %>% 
+  group_by(cut) %>% 
+  summarize(AvgPrice = mean(price))
+
+diamonds %>% 
+  group_by(cut) %>% 
+  summarize(AvgPrice = mean(price),
+            SumCarat = sum(carat))
+
+diamonds %>% 
+  group_by(cut, color) %>% 
+  summarize(AvgPrice = mean(price), 
+            SumCarat = sum(carat))
+
+##arrange
+#정렬을 위해 사용하는 함수로 order나 sort보다 이해하기 쉽다.
+diamonds %>%
+  group_by(cut) %>%
+  summarise(AvgPrice=mean(price),SumCarat=sum(carat)) %>% arrange(AvgPrice)
+
+diamonds %>%
+  group_by(cut) %>%
+  summarise(AvgPrice=mean(price),SumCarat=sum(carat)) %>% 
+  arrange(desc(AvgPrice))
+############################너무 중요함####################################
+
+
+##do
+#보다 일반적인 목적의 함수는 do를 통해 계산을 진행할 수 있다.
+topN<-function(x,N=5){
+  x %>% arrange(desc(price)) %>% head(N)
+  }
+diamonds %>% group_by(cut) %>% do(topN(.,N=3))
+
+#만약 이름이 있는 인자를 사용하면 표현식이 데이터 프레임의 열에 들어가게 되는데, 해당 그 열의 값은 실제로는 하나의 리스트다.
+diamonds %>% group_by(cut) %>% do(Top=topN(.,N=3))
+
+topBycut<-diamonds %>% group_by(cut) %>% do(Top=topN(.,N=3))
+
+class(topBycut)
+
+class(topBycut$Top)
+
+class(topBycut$Top[[1]])
+
+topBycut$Top[[1]]
+
+##데이터베이스와 dplyr 사용
+#install.packages("dbplyr")
+library(dbplyr)
+download.file("http://www.jaredlander.com/data/diamonds.db",
+              destfile = "data/diamonds.db", mode="wb")
+
+diaDBSource <- src_sqlite("data/diamonds.db")
+diaDBSource
+
+diaDBSource2 <- DBI::dbConnect(RSQLite::SQLite(), "data/diamonds.db")
+diaDBSource2
+
+diaTab <- tbl(diaDBSource, "diamonds")
+diaTab
+
+diaTab %>% 
+  group_by(cut) %>% 
+  summarize(Price = mean(price))
+
+diaTab %>% 
+  group_by(cut) %>% 
+  summarize(Price=mean(price), 
+            Carat=mean(Carat))
+
+#13.purr패키지를 사용한 순회
+##map 리스트의 각 요소에 대해 어떤 함수를 독립적으로 적용한 다음에, 그것을 같은 길이의 리스트로 반환한다.
+theList<-list(
+  A=matrix(1:9,3),
+  B=1:5,
+  C=matrix(1:4,2),
+  D=2
+)
+
+lapply(theList, sum)
+
+#install.packages("purrr")
+library(purrr)
+
+theList%>%map(sum)
+
+identical(lapply(theList, sum), theList%>%map(sum))
+
+theList2<-theList
+
+theList2[[1]][2,1]<-NA
+
+theList2[[2]][4]<-NA
+
+theList2 %>% map(sum)
+
+theList2 %>% map(function(x) sum(x,na.rm=TRUE))
+
+theList2 %>% map(sum,na.rm=TRUE)
+
+##반환값의 유형을 정의한 map 함수
+## 결과가 정수형 벡터를 원할 때 사용된다.
+
+theList %>% map_int(NROW)
+#평균은 정수형이 아닌 실수형이기 때문에...
+theList %>% map_int(mean)
+
+## 결과가 실수형 벡터를 원할 때 사용된다.
+theList %>% map_dbl(mean)
+
+## 결과가 문자형 원할 때 사용된다.
+theList %>% map_chr(class)
+
+theList3 <- theList
+
+theList3[['E']] <- factor(c("A", "B", "C"), ordered = TRUE)
+
+class(theList3$E)
+
+#ordered factor이기 때문에 에러를 발생 시킨다.
+theList3 %>%  map_chr(class)
+
+#그냥 map은 정상출력
+theList3 %>% map(class)
+
+## 결과가 논리형 벡터를 원할 때 사용한다.
+
+theList %>% map_lgl(function(x) NROW(x) < 3)
+# theList %>% map_int(NROW)
+
+## 데이터프레임으로 묶어서 반환한다.
+
+#데이터 프레임을 칼럼을 먼저 만들어주는 함수?
+buildDF <- function(x) {
+  data.frame(A=1:x, B=x:1)
+}
+
+listOfLengths <- list(3, 4, 1, 5)
+
+listOfLengths %>% map(buildDF)
+
+listOfLengths %>% map_df(buildDF)
+
+## 조건에 만족하면 수정하고, 만족하지 않으면 수정 ㄴ
+
+theList %>% map_if(is.matrix, function(x) x*2)
+
+theList %>% map(function(x) x*2)
+
+#포뮬러 ~를 사용하여 같은 결과를 얻을 수 있고 .x와 .y의 형태로 표현한다.
+theList %>% map_if(is.matrix, ~ .x*2)
+
+# 데이터 프레임에서 순회하기
+data(diamonds)
+
+diamonds %>% map_if(is.numeric, mean)
+diamonds %>% map_dbl(mean)
+
+diamonds %>% 
+  summarize_each(funs(mean))
+
+diamonds %>% 
+  summarize_all(mean)
+
+# 여러 입력값에 대해 map 사용하기
+
+firstList <- list(A=matrix(1:16, 4), B=matrix(1:16, 2), C=1:5)
+secondList <- list(A=matrix(1:16, 4), B=matrix(1:16, 8), C=15:1)
+
+simpleFunc <- function(x, y) {
+  NROW(x) + NROW(y)
+}
+
+map2(firstList, secondList, simpleFunc)
+map2_int(firstList, secondList, simpleFunc)
+
+pmap(list(firstList, secondList), simpleFunc)
+pmap_int(list(firstList, secondList), simpleFunc)
+
+#14. 데이터 재구조화
+
+sport<-c("Hockey","Baseball","Football")
+league<-c("NHL","MLB","NFL")
+trophy<-c("Stanley Cup", "Connissioner's Trophy", "Vince Lombardi Trophy")
+#cbind로 행을 기준으로 결합
+trophies1<-cbind(sport, league, trophy)
+
+#data.frame()을 사용해 또 다른 데이터 프레임을 만듦
+trophies2<-data.frame(sport=c("Basketball","Golf"),              league=c("NBA","PGA"), trophy=c("Larry O'Brien Championship Trophy","Wanamaker Trophy"), stringsAsFactors=FALSE)
+#rbind을 사용해서 하나의 데이처 프레임으로 만든다.
+trophies<-rbind(trophies1, trophies2)
+
+cbind(Sport=sport, Association=league, Prize=trophy)
+
+##조인
+download.file(url="http://jaredlander.com/data/US_Foreign_Aid.zip", destfile = "data/ForeignAid.zip")
+unzip("data/ForeignAid.zip", exdir="data")
+
+library(stringr)
+
+#파일들의 리스트를 먼저 얻는다.
+theFiles<-dir("data/",pattern="\\.csv")
+
+for(a in theFiles){
+  #데이터를 할당한 좋은 이름을 만든다. 디렉터리를 끌어온 다음 파일 이름을 12번째 부터 18번째 까지 사용
+  nameToUse<-str_sub(string=a, start=12, end=18)
+  #read.table 함수를 사용해 CSV파일을 읽는다.
+  temp<-read.table(file=file.path("data",a), header = TRUE, sep = ",", stringsAsFactors = FALSE)
+  #읽은 데이터를 워크스페이스에 할당한다.
+  assign(x=nameToUse, value=temp)
+}
+
+###merge 함수
+Aid90s00s <- merge(x=Aid_90s, y=Aid_00s,
+                   by.x = c("Country.Name", "Program.Name"),
+                   by.y = c("Country.Name", "Program.Name"))
+head(Aid90s00s)
+
+###plyr join 함수
+library(plyr)
+Aid90s00sJoin <- join(x=Aid_90s, y=Aid_00s,
+                      by=c("Country.Name", "Program.Name"))
+head(Aid90s00sJoin)
+
+#먼저 데이터 프레임의 이름을 파악한다.
+frameNames<-str_sub(string=theFiles, start=12, end=18)
+
+#빈 리스트를 만든다.
+frameList<-vector("list",length(frameNames))
+
+names(frameList)<-frameNames
+#각 데이터 프레임을 리스트에 추가한다.
+for(a in frameNames){
+  frameList[[a]]<-eval(parse(text=a))
+}
+
+head(frameList[[1]])
+
+head(frameList[["Aid_00s"]])
+
+head(frameList[[5]])
+
+head(frameList[["Aid_60s"]])
+
+#모든 데이처 프레임들이 하나의 리스트 안에 들어가 있어서 우리는 리스트를 순회 하면서 모든 요소들을 하나로 조인할 수 있다.
+
+allAid <- Reduce(function(...) {
+  join(..., by=c("Country.Name", "Program.Name"))},
+  frameList)
+
+dim(allAid)
+
+library(useful)#install.packages("useful")
+corner(allAid, c=15)
+
+```
+

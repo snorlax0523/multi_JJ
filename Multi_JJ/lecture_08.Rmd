@@ -1,0 +1,205 @@
+---
+title: "APM_과적합_모델튜닝"
+author: "JJ"
+date: "2018년 9월 20일"
+output:
+   html_document:
+    number_sections: true
+    toc: true
+    fig_width: 7
+    fig_height: 4.5
+    theme: readable
+    highlight: tango
+editor_options: 
+  chunk_output_type: console
+---
+
+#과적합과 모델튜닝
+
+##과적합 문제
+```{r, warning=FALSE, message=FALSE}
+
+
+```
+##모델튜닝
+```{r, warning=FALSE, message=FALSE}
+
+
+```
+##데이터 분할
+```{r, warning=FALSE, message=FALSE}
+library(AppliedPredictiveModeling)
+data(twoClassData)
+str(predictors)
+str(classes)
+trainingRows <- createDataPartition(classes,p = .80,list= FALSE)
+head(trainingRows)
+   trainPredictors <- predictors[trainingRows, ]
+trainClasses <- classes[trainingRows]
+# Do the same for the test set using negative integers.
+testPredictors <- predictors[-trainingRows, ]
+testClasses <- classes[-trainingRows]
+str(trainPredictors)
+str(testPredictors)
+
+```
+##리샘플링 기법
+###K-겹 교차검증
+```{r, warning=FALSE, message=FALSE}
+
+
+```
+
+##최종 튜닝 변수 선정
+```{r, warning=FALSE, message=FALSE}
+library(caret)
+data(GermanCredit)
+
+## First, remove near-zero variance predictors then get rid of a few predictors 
+## that duplicate values. For example, there are two possible values for the 
+## housing variable: "Rent", "Own" and "ForFree". So that we don't have linear
+## dependencies, we get rid of one of the levels (e.g. "ForFree")
+
+GermanCredit <- GermanCredit[, -nearZeroVar(GermanCredit)]
+GermanCredit$CheckingAccountStatus.lt.0 <- NULL
+GermanCredit$SavingsAccountBonds.lt.100 <- NULL
+GermanCredit$EmploymentDuration.lt.1 <- NULL
+GermanCredit$EmploymentDuration.Unemployed <- NULL
+GermanCredit$Personal.Male.Married.Widowed <- NULL
+GermanCredit$Property.Unknown <- NULL
+GermanCredit$Housing.ForFree <- NULL
+
+## Split the data into training (80%) and test sets (20%)
+set.seed(100)
+inTrain <- createDataPartition(GermanCredit$Class, p = .8)[[1]]
+GermanCreditTrain <- GermanCredit[ inTrain, ]
+GermanCreditTest  <- GermanCredit[-inTrain, ]
+
+## The model fitting code shown in the computing section is fairly
+## simplistic.  For the text we estimate the tuning parameter grid
+## up-front and pass it in explicitly. This generally is not needed,
+## but was used here so that we could trim the cost values to a
+## presentable range and to re-use later with different resampling
+## methods.
+
+library(kernlab)
+set.seed(231)
+sigDist <- sigest(Class ~ ., data = GermanCreditTrain, frac = 1)
+svmTuneGrid <- data.frame(sigma = as.vector(sigDist)[1], C = 2^(-2:7))
+
+### Optional: parallel processing can be used via the 'do' packages,
+### such as doMC, doMPI etc. We used doMC (not on Windows) to speed
+### up the computations.
+
+### WARNING: Be aware of how much memory is needed to parallel
+### process. It can very quickly overwhelm the available hardware. We
+### estimate the memory usage (VSIZE = total memory size) to be 
+### 2566M/core.
+
+library(doParallel)
+registerDoParallel(3)
+
+set.seed(1056)
+svmFit <- train(Class ~ .,
+                data = GermanCreditTrain,
+                method = "svmRadial",
+                preProc = c("center", "scale"),
+                tuneGrid = svmTuneGrid,
+                trControl = trainControl(method = "repeatedcv", 
+                                         repeats = 5,
+                                         classProbs = TRUE))
+## classProbs = TRUE was added since the text was written
+
+## Print the results
+svmFit
+
+## A line plot of the average performance. The 'scales' argument is actually an 
+## argument to xyplot that converts the x-axis to log-2 units.
+
+plot(svmFit, scales = list(x = list(log = 2)))
+
+## Test set predictions
+
+predictedClasses <- predict(svmFit, GermanCreditTest)
+str(predictedClasses)
+
+## Use the "type" option to get class probabilities
+
+predictedProbs <- predict(svmFit, newdata = GermanCreditTest, type = "prob")
+head(predictedProbs)
+
+
+## Fit the same model using different resampling methods. The main syntax change
+## is the control object.
+
+set.seed(1056)
+svmFit10CV <- train(Class ~ .,
+                    data = GermanCreditTrain,
+                    method = "svmRadial",
+                    preProc = c("center", "scale"),
+                    tuneGrid = svmTuneGrid,
+                    trControl = trainControl(method = "cv", number = 10))
+svmFit10CV
+
+set.seed(1056)
+svmFitLOO <- train(Class ~ .,
+                   data = GermanCreditTrain,
+                   method = "svmRadial",
+                   preProc = c("center", "scale"),
+                   tuneGrid = svmTuneGrid,
+                   trControl = trainControl(method = "LOOCV"))
+svmFitLOO
+
+set.seed(1056)
+svmFitLGO <- train(Class ~ .,
+                   data = GermanCreditTrain,
+                   method = "svmRadial",
+                   preProc = c("center", "scale"),
+                   tuneGrid = svmTuneGrid,
+                   trControl = trainControl(method = "LGOCV", 
+                                            number = 50, 
+                                            p = .8))
+svmFitLGO 
+
+set.seed(1056)
+svmFitBoot <- train(Class ~ .,
+                    data = GermanCreditTrain,
+                    method = "svmRadial",
+                    preProc = c("center", "scale"),
+                    tuneGrid = svmTuneGrid,
+                    trControl = trainControl(method = "boot", number = 50))
+svmFitBoot
+
+set.seed(1056)
+svmFitBoot632 <- train(Class ~ .,
+                       data = GermanCreditTrain,
+                       method = "svmRadial",
+                       preProc = c("center", "scale"),
+                       tuneGrid = svmTuneGrid,
+                       trControl = trainControl(method = "boot632", 
+                                                number = 50))
+svmFitBoot632
+```
+
+##추천하는 데이터 분할 방식
+
+##모델 선택
+```{r}
+set.seed(1)
+cvSplits <- createFolds(trainClasses, k = 10,
+returnTrain = TRUE)
+str(cvSplits)
+
+fold1 <- cvSplits[[1]]
+
+cvPredictors1 <- trainPredictors[fold1,]
+cvClasses1 <- trainClasses[fold1]
+nrow(trainPredictors)
+
+nrow(cvPredictors1)
+```
+
+```{r}
+
+```
+

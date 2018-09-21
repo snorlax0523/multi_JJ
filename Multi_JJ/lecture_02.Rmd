@@ -1,0 +1,629 @@
+---
+title: "lecture_02"
+author: "JJ"
+date: "2018년 9월 5일"
+output: 
+  html_document: 
+    highlight: textmate
+    theme: readable
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+#4.R의 기초
+
+#기초 수학
+1+1
+
+1+2+3
+
+3*7*2
+
+4/2
+
+4/3
+
+#변수
+x<-2
+x
+
+y=5
+y
+
+3->z
+z
+
+assign("j", 4)
+j
+
+#변수의 이름은 알파벳과 숫자, 마침표, 언더스코어를 조합해 만들 수 있다.
+
+#변수제거
+#j
+#rm(j)#j를 제거함
+
+#j#j변수가 삭제 되었으므로 오류 발생
+
+theVariable<-17
+#THEVARIABLE#오류가 발생함
+
+#숫자형 데이터
+class(x)
+
+is.numeric(x)
+
+i<-5L
+i
+
+is.integer(i)
+
+is.numeric(i)
+
+class(4L)
+
+class(2.8)
+
+4L*2.8
+
+class(5L)
+
+class(2L)
+
+5L/2L
+
+class(5L/2L)
+
+#문자열 데이터
+x<-"data"
+
+y<-factor("data")
+y
+
+nchar(x)
+
+nchar("hello")
+
+nchar(3)
+
+nchar(452)
+
+#nchar(y)#팩터에는 이 함수를 적용할 수 없다.
+
+#날짜
+date1<-as.Date("2012-06-28")
+date1
+
+class(date1)
+as.numeric(date1)
+
+date2<-as.POSIXct("2012-06-28 17:42")
+class(date2)
+
+as.numeric(date2)
+
+#lubridate 패키지와 chron 패키지를 통해 날짜와 시간 객체를 좀 더 쉽게 다룰 수 있다.
+
+class(date1)
+class(as.numeric(date1))
+
+#논리형
+TRUE*5
+
+FALSE*5
+
+k<-TRUE
+class(k)
+is.logical(k)
+
+TRUE
+T
+class(T)
+
+#축약할 경우 문제가 발생할 여지가 있다.
+T<-7
+T
+class(T)
+
+#2가 3과 같은가?
+2==3
+
+#2가 3과 다른가?
+2!=3
+
+#2가 3보다 작은가?
+2<3
+
+#2가 3보다 작거나 같은가?
+2<=3
+
+#2가 3보다 큰가?
+2>3
+
+#2가 3보다 크거나 같은가?
+2>=3
+
+#data가 stats와 같은가?
+"data"=="stats"
+
+#data가 stats보다 작은가?
+"data"=="stats"
+
+#벡터
+
+#벡터는 서로 다른 데이터를 담을 수 없다. 모두 같은 자료형만 가능함
+x<-1:10
+x
+
+#벡터 연산
+x*3
+
+x+2
+
+x-3
+
+x/4
+
+x^2
+
+sqrt(x)
+
+1:10
+
+10:1
+
+-2:3
+
+5:-7
+
+#길이가 같은 두 벡터를 만듦
+x<-1:10
+y<--5:4
+
+#더하기
+x+y
+#빼기
+x-y
+#곱하기
+x*y
+#나누기, 0으로 나누면 Inf가 됨.
+x/y
+#거듭제곱하기
+x^y
+#각 벡터의 길이 구하기
+length(x)
+length(y)
+length(x+y)
+
+x+c(1,2)
+
+x+c(1,2,3)
+
+#벡터의 비교연산
+x<=5
+
+x>y
+
+x<y
+#any 나 all을 적용하면 한 번에 통일된 값을 얻을 수 있다. all은 and, any는 or이다.
+
+x<-10:1
+
+#nchar를 통해 문자열의 길이를 계산할 수 있다.
+
+#벡터에서 개별 인자의 값에 접근할 때는 []를 사용한다.
+
+#factor형 벡터
+q<-c("Hockey","Football","Baseball", "Curling","Rugby","Lacrosse","Basketball","Tennis","Cricket","Soccer")
+
+q2<-c(q,"Hockey", "Lacrosse", "Hockey", "Water Polo", "Hockey", "Lacrosse")
+
+q2Factor<-as.factor(q2)
+
+as.numeric(q2Factor)
+#Factor의 레벨이 중요할 때가 있다.
+
+factor(x=c("High School", "College", "Masters", "Doctorate"), levels=c("High School","College", "Masters", "Doctorate"),ordered = TRUE)
+#ordered인자를 통해 순서를 지정할 수 있다.
+
+#도움말의 사용할 때 연산자는 백틱(`)을 사용한다.
+#이름을 정확히 모를 때는 apropos를 통해 탐색이 가능하다.
+
+apropos("ins")
+
+#결측값
+z<-c(1,2,NA,8,3,NA,3)
+is.na(z)
+
+#결측치를 다른 값으로 채우지 않고 버리거나 새로운 데이터를 습득함.
+#다른 값으로 채우는 경우 부득이할 때
+zChar<-c("Hockey",NA,"Lacrosse")
+zChar
+
+#NULL
+#NULL은 결측이 아니라 없음을 의미한다.
+z<-c(1,NULL,3)
+z
+
+d<-NULL
+is.null(d)
+
+#NULL 값은 벡터의 일부가 될 수 없으므로 당연히 is.null은 벡터화돼 있지 않다.
+
+#파이프
+library("magrittr")
+mean(x)
+
+x %>% mean
+
+z<-c(1,2,NA,8,3,NA,3)
+sum(is.na(z))
+
+z %>% is.na %>% sum
+#보통 dplyr 패키지에서 많이 활용하게 됨.
+
+#5.고급 데이터 구조
+
+#데이터 프레임, 행렬, 리스트는 자주 쓰이는 자료형이므로 잘 알아두면 좋음
+x<-10:1
+y<--4:5
+
+theDF<-data.frame(x,y,q)
+str(theDF)
+theDF
+
+theDF<-data.frame(First=x,Second=y,Sport=q)
+
+#행과 열을 반환하는 함수들
+ncol(theDF)#열의 갯수
+nrow(theDF)#행의 갯수
+dim(theDF)#행,열
+
+#names함수를 사용해 간단히 알아낼 수 있다.
+names(theDF)
+
+names(theDF)[3]
+
+#행의 이름 확인 또는 이름 할당
+rownames(theDF)
+rownames(theDF)<-c("One","Two","Three","Four","Five","Six","Seven", "Eight", "Nine", "Ten")
+
+rownames(theDF)
+#일반적인 인덱스로 돌려놓기
+rownames(theDF)<-NULL
+rownames(theDF)
+
+#head를 통한 처음 몇 개의 행 출력, tail의 경우는 뒤 몇개의 행 출력
+
+head(theDF, n=3)#초기값은 6, 갯수 지정 생략 가능
+
+tail(theDF)
+
+class(theDF)
+
+#call by name은 $연산자를 이용한다.
+theDF$Sport
+
+#행과 열을 통한 접근
+theDF[3,2]
+
+theDF[3,2:3]
+
+theDF[c(3,5),2]
+
+theDF[c(3,5),2:3]
+
+theDF[,3]
+
+theDF[,2:3]
+
+theDF[,c("First","Sport")]
+
+theDF[,"Sport"]#벡터로 반환
+
+theDF["Sport"]#데이터프레임으로 반환
+
+theDF[["Sport"]]#벡터로 반환
+
+#drop=FALSE를 사용하면 DF를 VEC 강제 형변환을 막아준다.
+
+#factor형을 더미변수 관리하는 예시
+newFactor<-factor(c("펜실베니아","뉴욕","뉴저지","뉴욕","테네시","메사추세츠","펜실베니아","뉴욕"))
+model.matrix(~newFactor-1)
+
+#List
+#3개의 요소를 가진 리스트
+list(1,2,3)
+
+#하나의 요소를 갖는 리스트
+list(c(1,2,3))
+
+#2개의 요소를 가진 리스트
+(list3<-list(c(1,2,3),3:7))
+
+list(theDF,1:10)
+
+list5<-(list(theDF,1:10,list3))
+list5
+
+#List에 이름 할당
+names(list5)<-c("data.frame","vector","list")
+names(list5)
+
+list5
+
+list6<-list(theDataFrame=theDF, TheVector=1:10, TheList=list3)
+list6
+names(list6)
+
+#빈 리스트를 만들 수 있다.
+(emptyList<-vector(mode="list",length=4))
+
+#list[[index]][index]형식으로 사용한다.
+
+#R에서 이야기하는 기본 행렬 연산은 같은 행 같은 열에 있는 요소의 일대일 연산이다.
+
+A<-matrix(1:10, nrow=5)
+B<-matrix(21:30, nrow=5)
+C<-matrix(21:40, nrow=2)
+
+A %*% t(B)#수학에서 이야기하는 일반적인 행렬 곱셈
+
+#행렬 또한 names를 통한 이름부여가 가능하다.
+
+#배열
+theArray<-array(1:12, dim=c(2,3,2))
+
+theArray
+
+#6.R로 데이터 읽어 오기
+#read.table이 기본이다.
+
+theUrl<-"http://www.jaredlander.com/data/TomatoFirst.csv"
+
+#stringsAsFactors를 사용하면 문자형으로 가져올 수 있다.
+tomato<-read.table(file=theUrl, header = T, sep=",", stringsAsFactors = F)
+
+str(tomato)
+
+View(tomato)
+
+#read_delim
+library(readr)
+theUrl<-"http://www.jaredlander.com/data/TomatoFirst.csv"
+tomato2<-read_delim(file = theUrl,delim = ',')
+#readr패키지에 있는 모든 함수는 tibble이라는 객체를 반환한다.
+
+tomato2
+
+#fread
+library(data.table)
+theUrl<-"http://www.jaredlander.com/data/TomatoFirst.csv"
+tomato3<-fread(input=theUrl, sep=",", header = TRUE)
+
+#엑셀데이터
+#mode에 wb를 줘야 해결됨. 아마도 웹저장소의 형태가 다르기 때문일 듯...
+download.file(url = "http://www.jaredlander.com/data/ExcelExample.xlsx",destfile="data/ExcelExample.xlsx",mode = 'wb')
+
+library(readxl)
+
+#1.작업 디렉토리를 확인해본다. 2.패키지를 설치한다.
+excel_sheets('data\\ExcelExample.xlsx')
+
+tomatoXL<-read_excel('data/ExcelExample.xlsx')
+tomatoXL
+
+#위치이용
+wineXL1<-read_excel('data/ExcelExample.xlsx',sheet=2)
+head(wineXL1)
+
+#시트이름
+wineXL2<-read_excel('data/ExcelExample.xlsx', sheet="Wine")
+head(wineXL2)
+
+download.file("http://www.jaredlander.com/data/diamonds.db",destfile="data/diamonds.db",mode='wb')
+
+#install.packages("RSQLite")
+library(RSQLite)
+
+drv<-dbDriver('SQLite')
+
+class(drv)
+
+#커넥션 구성
+con<-dbConnect(drv, 'data/diamonds.db')
+class(con)
+
+dbListTables(con)
+
+dbListFields(con, name='diamonds')
+dbListFields(con, name='DiamondColors')
+
+diamondsTable<-dbGetQuery(con, "SELECT * FROM diamonds", stringsAsFactors=FALSE)
+
+colorTable<-dbGetQuery(con, "SELECT * FROM DiamondColors", stringsAsFactors=FALSE)
+
+longQuery<-"SELECT*FROM diamonds, DiamondColors WHERE diamonds.color=DiamondColors.Color"
+
+diamonsJoin<-dbGetQuery(con, longQuery, stringAsFactors=FALSE)
+
+#다른 통계 툴의 데이터는 언젠가는 한 번 만나기 때문에 알아두면 매우 유용하게 쓸 수 있다. 특히 기업에서 기존에 갖고 있던 데이터가 다른 통계 툴에 의해 작성되었다면 피해갈 수 없다.
+
+#바이너리파일
+save(tomato, file="data/tomato.rdata")
+
+rm(tomato)
+#삭제 후 토마토 확인
+#head(tomato)
+#RData 파일에서 객체를 읽는다.
+load("data/tomato.rdata")
+head(tomato)
+
+#RDS를 사용하여 객체 저장 및 불러오기가 가능하다.
+smallerVector<-c(1,5,4)
+smallerVector
+
+#RDS로 저장
+saveRDS(smallerVector, file = "thisObject.rds")
+
+#RDS로 불러오기
+thatVect<-readRDS('thisObject.rds')
+
+thatVect
+
+identical(smallerVector, thatVect)
+
+#R에서 제공하는 기본 데이터
+
+data(diamonds, package = 'ggplot2')
+
+head(diamonds)
+
+#웹사이트에서 데이터 추출하기
+#install.packages("XML")
+library(XML)
+
+theUrl<-"https://www.jaredlander.com/2012/02/another-kind-of-super-bowl-pool"
+
+bowlPool<-readHTMLTable(theUrl, which=1, header = FALSE, stringAsFactors=FALSE)
+
+#install.packages("rvest")
+library(rvest)
+
+read_html(theUrl) %>% html_table()
+
+#웹 데이터 스크래핑
+ribalta<-read_html("https://www.jaredlander.com/data/ribalta.html")
+
+class(ribalta)
+
+ribalta %>% html_nodes('ul') %>% html_nodes('span')
+
+ribalta %>% html_nodes('.street')
+
+ribalta %>% html_nodes('.street') %>% html_text()
+
+ribalta %>% html_nodes("#longitude") %>% html_attr("value")
+
+ribalta %>% html_nodes("table.food-items") %>% magrittr::extract2(5) %>% html_table()
+
+#jason 데이터 읽기
+#install.packages("jsonlite")
+library(jsonlite)
+
+pizza<-fromJSON("https://www.jaredlander.com/data/PizzaFavorites.json")
+
+pizza
+
+class(pizza)
+class(pizza$Name)
+class(pizza$Details)
+
+#결론
+#데이터를 읽는 것은 데이터 분석 작업의 시작이다.
+
+#좋은 데이터 셋을 얻을 수 있는 곳
+#Kaggle, UCI, 깃허브 어썸데이터
+
+#7.R 통계 그래프
+#베이스 시스템과, lattice, ggplot2 등을 활용할 수 있다.
+#탐색적 데이터 분석(EDA)과 시각화(이해관계자들에게 보여주는 용도)에 쓰인다.
+
+library(ggplot2)
+data(diamonds)
+head(diamonds)
+
+#히스토그램
+hist(diamonds$carat, main="Carat Histogram", xlab = "Carat")
+
+#기본 산점도
+plot(price~carat, data=diamonds)
+
+plot(diamonds$carat, diamonds$price)
+
+#박스앤 휘스커
+boxplot(diamonds$carat)
+
+#두꺼운 선 중앙값, 상자의 경계가 제1사분위, 제4사분위
+
+#ggplot2
+#ggplot2 히스토그램
+
+dia_hist<-ggplot(data=diamonds)#기본 히스토그램 그래프
+
+dia_hist+geom_histogram(aes(x=carat))#x축 매핑
+
+dia_hist+geom_density(aes(x=carat), fill="grey50")
+
+dia_plot<-ggplot(diamonds, aes(x=carat, y=price))#기본 그래프
+
+dia_plot+geom_point()#산점도로 그리기 
+
+colorful_dia<-dia_plot+geom_point(aes(color=color))
+
+#facet을 통해 여러 함수를 그릴 수 있다.
+colorful_dia+facet_wrap(~color)#색을 기준으로 나눈다.
+
+colorful_dia+facet_grid(cut~clarity)#여러 기준으로 나눈다.
+
+dia_hist+geom_histogram(aes(x=carat))+facet_wrap(~color)
+
+#상자 그림과 바이올린 플롯
+ggplot(diamonds, aes(y=carat, x=1))+geom_boxplot()#상자
+
+ggplot(diamonds, aes(y=carat, x=cut))+geom_boxplot()#상자++
+
+ggplot(diamonds, aes(y=carat, x=cut))+geom_violin()#바이올린
+
+ggplot(diamonds, aes(y=carat, x=cut))+geom_point()+geom_violin()
+
+ggplot(diamonds, aes(y=carat, x=cut))+geom_violin()+geom_point()
+#레이어 순서가 바뀌면 레이아웃도 바뀐다.
+
+ggplot(economics, aes(x=date, y=pop))+geom_line()
+
+library(lubridate)
+
+#년도와 월 변수 생성 
+economics$year<-year(economics$date)
+
+economics$month<-month(economics$date, label = TRUE)
+
+#데이터 서브세팅
+#조건이 참인 경우에 해당하는 인덱스를 반환한다.
+#반대로 거짓을 빼는 것도 가능하다.
+econ2000<-economics[which(economics$year>=2000),]
+
+library(scales)
+
+#플롯 초기화
+g<-ggplot(econ2000, aes(x=month, y=pop))
+
+#선들을 색으로 코드화하고, year에 따라 그룹화한다.
+#group에스테틱은 데이터를 별로의 그룹으로 세분한다.
+g<-g+geom_line(aes(color=factor(year),group=year))
+
+#레전드의 이름을 Year로 한다.
+g<-g+scale_color_discrete(name="Year")
+#y축 포맷
+g<-g+scale_y_continuous(labels=comma)
+
+#제목과 축 레이블 추가
+g<-g+labs(title="Population Growth", x="Month", y="Population")
+#플롯을 출력
+g
+
+#gg테마
+library(ggthemes)
+
+#플롯을 만들어 g2에 저장
+g2<-ggplot(diamonds, aes(x=carat, y=price))+geom_point(aes(color=color))
+
+#테마설정
+g2+theme_economist()+scale_color_economist()
+g2+theme_excel()+scale_colour_excel()
+g2+theme_tufte()
+g2+theme_wsj()
+
+```
+

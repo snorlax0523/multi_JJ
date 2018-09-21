@@ -1,0 +1,780 @@
+---
+title: "과적합화문제해결"
+author: "JJ"
+date: "2018년 9월 19일"
+output: 
+  html_document:
+    number_sections: true
+    toc: true
+    fig_width: 7
+    fig_height: 4.5
+    theme: readable
+    highlight: tango
+editor_options: 
+  chunk_output_type: console
+---
+#일반화
+
+일반화: 모델 제작에 사용되지 않은 모든 데이터에도 모델을 적용할 수 있는 성질
+
+#과적합화
+
+과적합화: 이 문제에서는 통신사 고객이 모집단인데, 훈련 데이터에만 딱 맞는 모델을 만들어, 데이터 마이닝을 통해 훈련데이터 외에도 적용할 수 있는 일반화된 모델을 만들지 못했다.
+
+아직 학습하지 않은 데이터에 대한 일반화는 희생하고 훈련 데이터에만 모델을 맞추려는 경향
+모든 마이닝 절차에는 어느 정도 과적합화 경향이 있음(앞의 예는 극단적)
+
+과적합화는 알아내기도 쉽지 않고, 과적합화 되지 않은 데이터 마이닝 절차를 사용할 수 있는 것도 아니다.
+모델 복잡도와 과적합화 문제는 동전의 양면
+
+과적합화되어 있는지를 알아내고 원칙에 따라 복잡도를 관리하는 전략이 가장 좋다.
+이슈1. 과적합화 정도의 측정
+이슈2. 가능한 한 과적합화를 피하는 방법
+
+#과적합화 검사
+
+##예비 데이터와 적합도 그래프
+예비 데이터
+타겟 변수값은 알지만 모델 생성에 사용되지 않은 데이터
+타겟 변수값을 예측할 실제 데이터는 아니지만 실험실에서 모델의 일반화 성능을 측정하기 위해 떼어 놓은 데이터
+시험 세트
+
+적합도 그래프: 모델 복잡도에 따른 정확도
+Step1. 모델 복잡도 낮고, 정확도 낮음
+Step2. 모델 복잡도 중간, 정확도 최적
+Step3. 모델 복잡도 높고, 정확도 낮아짐(과적합화)
+
+```{r ,warning=FALSE, message=FALSE, echo=FALSE}
+knitr::include_graphics("C:\\Users\\student\\Documents\\Multi_JJ\\Graphics\\과적합5_3_1.jpg")
+```
+고객 이탈 모델에 대한 적합도 그래프
+
+
+
+##트리 유도에서의 과적합화
+과적합 모델
+
+트리의 단말 노드에 데이터가 하나만 있을 때까지 분할 (극단적인 과적합 모델링)
+훈련데이터에 대해서는 100%의 성능
+테이블 모델 보다는 나은 모델
+새로운 데이터에 대해 단말 노드 결정이 가능하기 때문
+트리의 복잡도는 노드의 수
+
+
+적합도 그래프
+
+스위트 스팟(SS)
+이론적으로 SS를 찾아내는 방법은 아직 미존재
+경험적으로 SS를 찾아야 함.
+
+```{r ,warning=FALSE, message=FALSE, echo=FALSE}
+knitr::include_graphics("C:\\Users\\student\\Documents\\Multi_JJ\\Graphics\\과적합5_3_2.jpg")
+
+```
+
+
+##수학 함수에서의 과적합화
+
+함수가 복잡해지는 이유: 모델에 속성을 추가하기 때문이다.
+기존 속성의 제곱, 기존 속성간 비율 추가
+  f(x) = w0 + w1x1 + w2x2 + w3x3 + 
+  -> f(x) = w0 + w1x1 + w2x2 + w3x3 + w4x4 + w5x5  (x4 = x12 , x5 = x2 / x3)
+차원을 늘리면 적합도가 증가함.
+
+데이터 마이닝 현황
+
+ 수많은 모델을 아예 자동으로 만들거나 속성이 너무 많아 수작업으로 속성을 선택하기는 어려움
+
+예시) 온라인 광고를 출력하는 기업의 경우 매주 수백만 개의 특징을 이용해 수천 개의 모델을 만들어야 하는 경우
+
+
+#사례: 선형 함수 과적합화
+```{r ,warning=FALSE, message=FALSE, echo=FALSE}
+knitr::include_graphics("C:\\Users\\student\\Documents\\Multi_JJ\\Graphics\\과적합5_41.jpg")
+
+knitr::include_graphics("C:\\Users\\student\\Documents\\Multi_JJ\\Graphics\\과적합5_42.jpg")
+
+knitr::include_graphics("C:\\Users\\student\\Documents\\Multi_JJ\\Graphics\\과적합5_43.jpg")
+
+```
+
+
+#사례: 왜 과적합화가 문제인가?
+왜 성능이 떨어질까?
+모델이 복잡해지면서 해로운 가짜 연관성까지 학습하게 되기 때문
+가짜 연관성은 훈련 세트에만 존재하는 특이한 성질 일반화 X
+
+교재 p.156-157
+모집단 설명  훈련데이터 설명(표)  분류트리 모델 (a) 설명  (b) 과적합 설명
+(b)의 오류율은 30%, (a)의 예상 오류율은 25%
+
+과적합화 문제는 분류트리에만 국한되지 않는다.
+모집단으로부터 추출된 유한 표본은 편향되어 있지 않더라도 변이를 포함한다.
+모집단 전체에 대해 알고 있는 경우는 거의 없으므로 예비 데이터를 이용해 과적합화 여부를 알아내는 것이 좋다.
+(과적합화를 알아내는 이론적인 분석 방법이 없으므로)
+
+#예비 데이터 평가에서 교차 검증까지
+
+단 한 세트에 대한 추정일 뿐  정확도에 대한 확신?
+
+교차 검증(Cross Validation)
+
+더욱 정교한 예비 훈련 및 시험 절차
+일반화 성능을 딱 한번 추정하는 대신 평균이나 변이와 같은 추정된 성능에 대한 통계 데이터를 갖게 되면 데이터 세트에 따라 성능이 어떻게 바뀔지 예측할 수 있다.
+여러 번 분할하고 시험하기 위한 표본을 체계적으로 바꿔가면서 모든 데이터에 대해 추정치를 계산
+
+
+```{r ,warning=FALSE, message=FALSE, echo=FALSE}
+knitr::include_graphics("C:\\Users\\student\\Documents\\Multi_JJ\\Graphics\\과적합5_6_1.jpg")
+```
+
+#5.7 다시 모델링한 고객 이탈 문제
+
+```{r ,warning=FALSE, message=FALSE, echo=FALSE}
+knitr::include_graphics("C:\\Users\\student\\Documents\\Multi_JJ\\Graphics\\과적합5_7_1.jpg")
+
+knitr::include_graphics("C:\\Users\\student\\Documents\\Multi_JJ\\Graphics\\과적합5_7_2.jpg")
+```
+
+
+
+
+#학습 곡선
+
+학습곡선
+
+훈련 데이터 양 증가에 따른 일반화 성능을 보여주는 그래프
+로지스틱 회귀 분석 (데이터 적을 때)
+융통성이 떨어짐
+데이터가 적을 때는 과적합화가 덜 일어남
+복잡한 데이터는 완전히 모델링하지 못함.
+
+트리 유도 (데이터 많을 때)
+
+융통성이 좋음
+데이터가 적을 때는 과적합화가 일어나기 쉬움
+훈련 데이터가 커지면 복잡한 규칙도 잘 모델링
+
+```{r ,warning=FALSE, message=FALSE, echo=FALSE}
+knitr::include_graphics("C:\\Users\\student\\Documents\\Multi_JJ\\Graphics\\과적합5_8_1.jpg")
+
+```
+
+적합도 그래프 vs 학습곡선
+
+학습곡선
+x 축은 훈련 데이터의 크기
+일반화 성능을 보여줌
+
+적합도 그래프
+
+훈련 데이터의 크기를 고정
+x 축은 모델의 복잡도 (노드의 수)
+훈련 데이터에 대한 성능, 일반화 성능 표현
+
+학습 곡선 사용례
+
+데이터가 자산
+학습 곡선을 그렸을 때 일반화 성능이 향상되어야 의미 있음.
+데이터 확보에 투자
+
+일반화 성능이 향상되지 않는다면
+
+훈련 데이터 수집에 투자하는 것은 무의미
+성능 개선 방안
+더 나은 특징(변수)을 고안하는 등 모델을 개선할 다른 방법을 찾아야 함.
+
+
+#과적합화 회피와 복잡도 제어
+
+##과적합화 회피와 복잡도 제어
+트리유도의 가장 큰 문제점
+
+단말 노드가 순수해질 때까지 훈련 데이터에 맞춰 트리를 계속 키우려고 한다는 점
+데이터에 과적합화된 지나치게 크고 복잡한 트리가 만들어진다.
+
+
+과적합화를 피하기 위한 두 가지 방법
+
+너무 복잡해지기 전에 트리의 성장을 멈추게 한다.
+트리를 최대한 키운 후에 프루닝해 크기를 줄인다.
+->단말 노드에 들어가는 객체의 최소 한도 정하기
+
+장점: 많은 데이터 가지들은 커지고, 적은 가지는 짧아짐, 데이터 분산에 따라 자동으로 모델을 적응
+
+  단점: 임계치를 얼마로 설정?  해결책: 분기에 따른 정보량 증가가 우연인지에 대한 가설 검증(p-값 이용)
+  p-값이 5%보다 적으면 계속 분기
+->지나치게 큰 트리를 프루닝
+
+##과적합화를 피하기 위한 일반적인 방법
+
+동일 데이터에 복잡도가 다른 모델이 여러 개 있을 때의 선택 방법
+
+-방법: 레이블이 붙은 시험 데이터를 이용: 시험 데이터가 모델 생성과정에 관여
+  +내포된 예비 시험(Nested Holdout Test): 훈련 세트를 하위 훈련 세트와 시험 세트로 분할 모델 생성
+
+-절차: 훈련 세트의 하위 세트를 만들어 모델 복잡도를 결정하고, 훈련세트 전체를 이용해 최종 모델을 만들고, 예비 세트로 일반화 성능 검증
++하위 세트를 이용한 모델의 복잡도 결정  모델 생성  일반화 성능 검증
+
+-복잡도를 제어하는 실험적인 모델링은 계산 부담 때문에 실무에 널리 응용된지 10여 년밖에 안된다
+
+-응용
+
++다른 유도 알고리즘이나 다양한 복잡도에 적용
+
++특징 집합을 줄이려면 여러 특징 집합으로 내포된 예비 절차를 실행해 최고의 모델을 골라 내는 것이 좋다. (순차 전진 선택, 순차 후진 제거) 
+
+
+
+##파라미터 최적화에서 과적합화 피하기
+
+데이터에 대한 적합도와 모델에 대한 복잡도 사이에 “올바른“ 균형 잡기
+
+균일화: 모델을 데이터에 적합화하는 것과 단순함 모두를 최적화하는 것
+
+격자 검색(Grid Search): 훈련 데이터에 내포된 교차 검증을 통해 파라미터값을 최적화하는 방법
+
+#실습예제: 트리분석 
+```{r, warning=FALSE}
+fileUrl <- "http://mlr.cs.umass.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.data"
+download.file(fileUrl, destfile = "Data/wdbc.data")
+
+wdbc<-read.csv("Data/wdbc.data",header=F)
+head(wdbc)
+
+col1<-c("RADIUS","TEXTURE","PERIMETER","AREA","SMOOTHNESS","COMPACTNESS","CONCAVITY","CONCAVE_POINTS","SYMMETRY","FRACTAL_DIMENSION")
+col2<-c("mean","SE","worst")
+col12<-outer(col1,col2,FUN=paste,sep="_")
+col_nm<-c("ID","Diagnosis",col12)
+
+names(wdbc)<-col_nm
+head(wdbc)
+str(wdbc)
+#B양성, 악성
+
+wdbc_glm<-glm(data=wdbc[,-1],formula=Diagnosis~.,family=binomial(logit))
+summary(wdbc_glm)
+
+(wdbc_glm_mat<-table(ifelse(predict(wdbc_glm,wdbc, type='response') > 0.5, "B", "M"),wdbc$Diagnosis))
+paste("GLM Accuracy =",sum(diag(wdbc_glm_mat))/sum(wdbc_glm_mat))
+
+install.packages("RWeka")
+library(RWeka)
+#install.package("rpartykit")
+
+wdbc_J48<-J48(data=wdbc[,-1],formula=Diagnosis~.)
+plot(wdbc_J48)
+
+(wdbc_J48_mat<-table(predict(wdbc_J48,wdbc, type='class'),wdbc$Diagnosis))
+paste("J48 Accuracy =",sum(diag(wdbc_J48_mat))/sum(wdbc_J48_mat))
+
+```
+
+#실습예제: 선형 회귀 모형
+```{r, warning=FALSE}
+library(tidyverse)
+
+# 19.1 Simple Linear Regression
+
+data(father.son, package='UsingR')
+
+head(father.son)
+
+ggplot(father.son, aes(x=fheight, y=sheight)) + 
+  geom_point() +
+  geom_smooth(method = "lm") + labs(x="Fathers", y="Sons")
+
+heightsLM <- lm(sheight ~ fheight, data=father.son)
+heightsLM
+
+summary(heightsLM)
+
+## 19.1.1 ANOVA Alternative
+
+data(tips, package="reshape2")
+head(tips)
+
+tipsAnova <- aov(tip ~ day - 1, data=tips)
+
+tipsLM <- lm(tip ~ day - 1, data=tips)
+
+summary(tipsAnova)
+summary(tipsLM)
+
+tipsByDay <- tips %>% 
+  group_by(day) %>% 
+  summarize(tip.mean = mean(tip), 
+            tip.sd = sd(tip),
+            Length=NROW(tip),
+            tfrac=qt(p=.90, df=Length-1),
+            Lower=tip.mean - tfrac*tip.sd/sqrt(Length),
+            Upper=tip.mean + tfrac*tip.sd/sqrt(Length))
+
+tipsByDay
+
+tipsInfo <- summary(tipsLM)
+# tipsCoef <- as.data.frame(tipsInfo$coefficients[, 1:2])
+# tipsCoef <- within(tipsCoef, {
+#   Lower <- Estimate - qt(p=0.90, df=tipsInfo$df[2]) * `Std. Error`
+#   Upper <- Estimate + qt(p=0.90, df=tipsInfo$df[2]) * `Std. Error`
+#   day <- rownames(tipsCoef)
+# })
+# tipsCoef
+
+tipsCoef <- as.data.frame(tipsInfo$coefficients[, 1:2]) %>% 
+  rownames_to_column() %>% 
+  rename(day=rowname) %>% 
+  mutate(Lower = Estimate - qt(p=0.90, df=tipsInfo$df[2]) * `Std. Error`,
+         Upper = Estimate + qt(p=0.90, df=tipsInfo$df[2]) * `Std. Error`)
+
+ggplot(tipsByDay, aes(x=tip.mean, y=day)) + geom_point() +
+  geom_errorbarh(aes(xmin=Lower, xmax=Upper), height=.3) +
+  ggtitle("Tips by day calculated manually")
+
+ggplot(tipsCoef, aes(x=Estimate, y=day)) + geom_point() +
+  geom_errorbarh(aes(xmin=Lower, xmax=Upper), height=.3) +
+  ggtitle("Tips by day calculated from regression model")
+
+# 19.2 Multiple Regression
+
+housing <- read_csv("http://www.jaredlander.com/data/housing.csv")
+
+names(housing) <- c("Neightborhood", "Class", "Units", "YearBuilt",
+                    "SqFt", "Income", "IncomePerSqFT", "Expense",
+                    "ExpensePerSqFt", "NetIncome", "Value", 
+                    "ValuePerSqFt", "Boro")
+housing
+
+ggplot(housing, aes(x=ValuePerSqFt)) +
+  geom_histogram(binwidth = 10) + labs(x="Value per Square Foot")
+
+ggplot(housing, aes(x=ValuePerSqFt, fill=Boro)) +
+  geom_histogram(binwidth = 10) + labs(x="Value per Square Foot")
+
+ggplot(housing, aes(x=ValuePerSqFt, fill=Boro)) +
+  geom_histogram(binwidth = 10) + labs(x="Value per Square Foot") +
+  facet_wrap(~Boro)
+
+ggplot(housing, aes(x=SqFt)) + geom_histogram()
+ggplot(housing, aes(x=Units)) + geom_histogram()
+ggplot(housing %>% filter(Units < 1000), aes(x=SqFt)) +
+  geom_histogram()
+ggplot(housing %>% filter(Units < 1000), aes(x=Units)) +
+  geom_histogram()
+
+ggplot(housing, aes(x=SqFt, y=ValuePerSqFt)) + geom_point()
+ggplot(housing, aes(x=Units, y=ValuePerSqFt)) + geom_point()
+ggplot(housing %>% filter(Units < 1000), aes(x=SqFt, y=ValuePerSqFt)) +
+  geom_point()
+ggplot(housing %>% filter(Units < 1000), aes(x=Units, y=ValuePerSqFt)) +
+  geom_point()
+
+#그래프를 확인한 뒤 산점도의 상태에 따라 적당한 변환이 필요함, 로그를 취하거나 제곱근으로 조정해준다. 
+sum(housing$Units >= 1000)
+
+# remove them
+
+housing <- housing %>% filter(Units < 1000)
+
+# plot ValuePerSqFt against SqFt
+ggplot(housing, aes(x=SqFt, y=ValuePerSqFt)) + geom_point()
+ggplot(housing, aes(x=log(SqFt), y=ValuePerSqFt)) + geom_point()
+ggplot(housing, aes(x=SqFt, y=log(ValuePerSqFt))) + geom_point()
+ggplot(housing, aes(x=log(SqFt), y=log(ValuePerSqFt))) + geom_point()
+
+# plot ValuePerSqFt aginast Units
+ggplot(housing, aes(x=Units, y=ValuePerSqFt)) + geom_point()
+
+ggplot(housing, aes(x=log(Units), y=ValuePerSqFt)) + geom_point()
+
+ggplot(housing, aes(x=Units, y=log(ValuePerSqFt))) + geom_point()
+
+ggplot(housing, aes(x=log(Units), y=ValuePerSqFt)) + geom_point()
+
+house1 <- lm(ValuePerSqFt ~ Units + SqFt + Boro, data=housing)
+summary(house1)
+
+# three things below are the same
+house1$coefficients
+coef(house1)
+coefficients(house1)
+
+library(coefplot)
+coefplot(house1)
+
+house2 <- lm(ValuePerSqFt ~ Units * SqFt + Boro, data=housing)
+house3 <- lm(ValuePerSqFt ~ Units : SqFt + Boro, data=housing)
+
+coef(house2)
+coef(house3)
+
+coefplot(house2)
+coefplot(house3)
+
+house4 <- lm(ValuePerSqFt ~ SqFt * Units * Income, data=housing)
+coef(house4)
+
+house5 <- lm(ValuePerSqFt ~ Class*Boro, data=housing)
+house5$coefficients
+
+coefplot(house1, sort = "mag") + scale_x_continuous(limits=c(-.25, .1))
+coefplot(house1, sort = "mag") + scale_x_continuous(limits=c(-.0005, .0005))
+
+house1.b <- lm(ValuePerSqFt ~ scale(Units) + scale(SqFt) + Boro,
+               data=housing)
+coefplot(house1.b, sort="mag")
+
+house6 <- lm(ValuePerSqFt ~ I(SqFt/Units) + Boro, data=housing)
+coef(house6)
+
+house7 <- lm(ValuePerSqFt ~ (Units + SqFt)^2, housing)
+house7$coefficients
+
+house8 <- lm(ValuePerSqFt ~ Units * SqFt, housing)
+coef(house8)
+
+identical(house7$coefficients, house8$coefficients)
+
+house9 <- lm(ValuePerSqFt ~ I(Units + SqFt)^2, housing)
+house9$coefficients
+
+# as from the coefplot package
+multiplot(house1, house2, house3)
+
+housingNew <- read_csv("http://www.jaredlander.com/data/housingNew.csv")
+
+housePredict <- predict(house1, newdata=housingNew, se.fit = TRUE,
+                        interval = "prediction", level = .95)
+
+head(housePredict$fit)
+head(housePredict$se.fit)
+
+
+# 20.1 Logistic Regression
+
+library(tidyverse)
+
+acs <- read_csv("http://jaredlander.com/data/acs_ny.csv")
+
+acs <- acs %>% 
+  mutate(FamilyIncome = parse_number(FamilyIncome),
+         NumBedrooms = parse_number(NumBedrooms),
+         NumChildren = parse_number(NumChildren),
+    Income = FamilyIncome >= 150000)
+
+library(useful)
+
+ggplot(acs, aes(x=FamilyIncome)) +
+  geom_density(fill="grey", color="grey") +
+  geom_vline(xintercept = 150000) +
+  scale_x_continuous(labels = multiple.dollar, limits=c(0, 1000000))
+
+head(acs)
+
+income1 <- glm(Income ~ HouseCosts + NumWorkers + OwnRent + NumBedrooms + FamilyType,
+               data=acs, family=binomial(link = "logit"))
+summary(income1)
+
+library(coefplot)
+coefplot(income1)
+
+invlogit(income1$coefficients)
+
+# 20.2 Poisson Regression
+
+ggplot(acs, aes(x=NumChildren)) + geom_histogram(binwidth = 1)
+
+children1 <- glm(NumChildren ~ FamilyIncome + FamilyType + OwnRent,
+                 data=acs, family=poisson(link="log"))
+summary(children1)
+
+coefplot(children1)
+
+
+# the standarized residuals
+z <- (acs$NumChildren - children1$fitted.values) /
+  sqrt(children1$fitted.values)
+# Overdispersion Factor
+sum(z^2) / children1$df.residual
+
+# Overdispersion p-value
+pchisq(sum(z^2), children1$df.residual)
+
+children2 <- glm(NumChildren ~ FamilyIncome + FamilyType + OwnRent,
+                 data=acs, family=quasipoisson(link = "log"))
+multiplot(children1, children2)
+
+# 20.3 Other Generalized Linear Models
+
+# 20.4 Survival Analysis
+
+library(survival)
+head(bladder)
+
+bladder[100:105,]
+
+# now look at the response variable built by build.y
+survObject <- with(bladder[100:105, ], Surv(stop, event))
+
+# Surv(stop, event, data = bladder %>% slice(100:105))
+
+survObject
+survObject[, 1:2]
+
+cox1 <- coxph(Surv(stop, event) ~ rx + number + size + enum,
+              data=bladder)
+
+summary(cox1)
+plot(survfit(cox1), xlab = "Days", ylab = "Survival Rate",
+     conf.int = TRUE)
+
+cox2 <- coxph(Surv(stop, event) ~ strata(rx) + number +
+                size + enum, data=bladder)
+summary(cox2)
+
+plot(survfit(cox1), xlab = "Days", ylab = "Survival Rate",
+     conf.int = TRUE, col = 1:2)
+legend("bottomleft", legend=c(1, 2), lty=1, col=1:2,
+       text.col=1:2, title="rx")
+
+cox.zph(cox1)
+
+cox.zph(cox2)
+
+head(bladder2)
+
+ag1 <- coxph(Surv(start, stop, event) ~ rx + number + size + enum + 
+               cluster(id), data=bladder2)
+ag2 <- coxph(Surv(start, stop, event) ~ strata(rx) + number + size + enum + cluster(id), data = bladder2)
+
+plot(survfit(ag1), conf.int = TRUE)
+plot(survfit(ag2), conf.int = TRUE, col = 1:2)
+legend("topright", legend=c(1, 2), lty = 1, col = 1:2,
+       text.col = 1:2, title = "rx")
+
+
+
+
+
+library(tidyverse)
+
+housing <- read_csv("data/housing.csv")
+
+names(housing) <- c("Neighborhood", "Class", "Units", "YearBuilt", "SqFt",
+                    "Income", "IncomePerSqFt", "Expense", "ExpensePerSqFt", 
+                    "NetIncome", "Value", "ValuePerSqFt", "Boro")
+
+housing <- filter(housing, Units < 1000)
+head(housing)
+
+# fit a model
+house1 <- lm(ValuePerSqFt ~ Units + SqFt + Boro, data=housing)
+summary(house1)
+
+ggplot(housing, aes(x=log(SqFt), y=ValuePerSqFt))+geom_point(aes(col=housing$Boro))+geom_smooth(method="lm")
+
+# visualize the model
+library(coefplot)
+coefplot(house1)
+
+head(fortify(house1))
+
+# save a plot to an object
+# notice we are using the created columns for the x- and y-axes
+# they are .fitted and .resid
+
+h1 <- ggplot(aes(x=.fitted, y=.resid), data = house1) +
+  geom_point() +
+  geom_hline(yintercept = 0) +
+  geom_smooth(se = FALSE) +
+  labs(x = "Fitted Values", y = "Residuals")
+
+# print the plot
+h1
+
+h1 + geom_point(aes(color=Boro))
+
+# basic plot
+plot(house1, which=1)
+plot(house1, which=1, col=as.numeric(factor(house1$model$Boro)))
+
+legend("topright", legend=levels(factor(house1$model$Boro)), pch=1,
+       col=as.numeric(factor(levels(factor(house1$model$Boro)))),
+       text.col = as.numeric(factor(levels(factor(house1$model$Boro)))),
+       title = "Boro")
+
+plot(house1, which=2)
+ggplot(house1, aes(sample = .stdresid)) + stat_qq() + geom_abline()
+
+ggplot(house1, aes(x=.resid)) + geom_histogram()
+# Histogram of residuals from house1. This does not look normally distributed, meaning our model is incomplete.
+
+# 21.2 Comparing Models
+
+house2 <- lm(ValuePerSqFt ~ Units * SqFt + Boro, data=housing)
+house3 <- lm(ValuePerSqFt ~ Units + SqFt * Boro + Class, data=housing)
+house4 <- lm(ValuePerSqFt ~ Units + SqFt * Boro + SqFt * Class, data=housing)
+house5 <- lm(ValuePerSqFt ~ Boro + Class, data=housing)
+
+multiplot(house1, house2, house3, house4, house5, pointSize = 2)
+
+anova(house1, house2, house3, house4, house5)
+
+AIC(house1, house2, house3, house4, house5)
+
+
+# create the binary variable based on whether ValuePerSqFt is above 150
+housing$HighValue <- housing$ValuePerSqFt >= 150
+
+high1 <- glm(HighValue ~ Units + SqFt + Boro,
+             data=housing, family=binomial(link="logit"))
+high2 <- glm(HighValue ~ Units * SqFt + Boro,
+             data=housing, family=binomial(link="logit"))
+high3 <- glm(HighValue ~ Units + SqFt * Boro + Class,
+             data=housing, family=binomial(link="logit"))
+high4 <- glm(HighValue ~ Units + SqFt * Boro + SqFt * Class,
+             data=housing, family=binomial(link="logit"))
+high5 <- glm(HighValue ~ Boro + Class,
+             data=housing, family=binomial(link="logit"))
+
+anova(high1, high2, high3, high4, high5)
+AIC(high1, high2, high3, high4, high5)
+BIC(high1, high2, high3, high4, high5)
+
+# 21.3 Cross-Validation
+
+library(boot)
+# refit house1 using glm instead of lm
+houseG1 <- glm(ValuePerSqFt ~ Units + SqFt + Boro,
+               data=housing, family=gaussian(link="identity"))
+identical(coef(house1), coef(houseG1))
+
+# run the cross-validation with 5 folds
+houseCV1 <- cv.glm(housing, houseG1, K=5)
+houseCV1$delta
+
+houseG2 <- glm(ValuePerSqFt ~ Units * SqFt + Boro, data=housing)
+houseG3 <- glm(ValuePerSqFt ~ Units + SqFt * Boro + Class, data=housing)
+houseG4 <- glm(ValuePerSqFt ~ Units + SqFt * Boro + SqFt * Class, data=housing)
+houseG5 <- glm(ValuePerSqFt ~ Boro + Class, data=housing)
+
+houseCV2 <- cv.glm(housing, houseG2, K=5)
+houseCV3 <- cv.glm(housing, houseG3, K=5)
+houseCV4 <- cv.glm(housing, houseG4, K=5)
+houseCV5 <- cv.glm(housing, houseG5, K=5)
+
+cvResults <- as.data.frame(rbind(houseCV1$delta, houseCV2$delta,
+                                 houseCV3$delta, houseCV4$delta,
+                                 houseCV5$delta))
+# do some cleaning up to make the results more presentable give better column names
+names(cvResults) <- c("Error", "Adjusted.Error")
+
+cvResults$Model <- sprintf("houseG%s", 1:5)
+cvResults
+
+# visualize the results
+# test with ANOVA
+cvANOVA <- anova(houseG1, houseG2, houseG3, houseG4, houseG5)
+cvResults$ANOVA <- cvANOVA$`Resid. Dev`
+
+cvResults$AIC <- AIC(houseG1, houseG2, houseG3, houseG4, houseG5)$AIC
+
+# make the data.frame suitable for plotting
+
+cvMelt <- cvResults %>% 
+  select(Model, everything()) %>% 
+  gather(Measure, Value, Error:AIC)
+
+ggplot(cvMelt, aes(x=Model, y=Value)) +
+  geom_line(aes(group=Measure, color=Measure)) + 
+  facet_wrap(~Measure, scales="free_y") +
+  theme(axis.text.x=element_text(angle=90, vjust=.5)) +
+  guides(color=FALSE)
+
+cv.work <- function(fun, k = 5, data,
+                    cost = function(y, yhat) mean((y - yhat)^2),
+                    response="y", ...) {
+  # generate folds
+  folds <- tibble(Fold=sample(rep(x=1:k, length.out=nrow(data))),
+                  Row=1:nrow(data))
+  
+  # start the error at 0
+  error <- 0
+  
+  ## loop through each of the folds
+  ## for each fold:
+  ## fit the model on the training data
+  ## predict on the test data
+  ## compute the error and accumulate it
+  for (f in 1:max(folds$Fold)) {
+    # rows that are in test set
+    theRows <- folds$Row[folds$Fold == f]
+    
+    ## call fun on data[-theRows, ]
+    ## predict on data[theRows, ]
+    mod <- fun(data=data[-theRows, ], ...)
+    pred <- predict(mod, data[theRows, ])
+    
+    # add new error weighted by the number of rows in this fold
+    error <- error +
+      cost(data[theRows, response], pred) * (length(theRows) / nrow(data))
+  }
+  return(error)
+}
+
+cv1 <- cv.work(fun = lm, k = 5, data=housing, response="ValuePerSqFt",
+               formula=ValuePerSqFt ~ Units + SqFt + Boro)
+cv2 <- cv.work(fun = lm, k = 5, data=housing, response="ValuePerSqFt",
+               formula=ValuePerSqFt ~ Units * SqFt + Boro)
+cv3 <- cv.work(fun = lm, k = 5, data=housing, response="ValuePerSqFt",
+               formula=ValuePerSqFt ~ Units + SqFt * Boro + Class)
+cv4 <- cv.work(fun = lm, k = 5, data=housing, response="ValuePerSqFt",
+               formula=ValuePerSqFt ~ Units + SqFt * Boro + SqFt*Class)
+cv5 <- cv.work(fun = lm, k = 5, data=housing, response="ValuePerSqFt",
+               formula=ValuePerSqFt ~ Boro + Class)
+
+cvResults <- data.frame(Model=sprintf("house%s", 1:5),
+                        Error=c(cv1, cv2, cv3, cv4, cv5))
+
+# 21.4 Bootstrap
+
+data(baseball, package="plyr")
+baseball <- filter(baseball, year >= 1990)
+
+baseball
+
+bat.avg <- function(data, indices=1:NROW(data), hits="h", at.bats="ab") {
+  sum(data[indices, hits], na.rm=TRUE) / sum(data[indices, at.bats], na.rm=TRUE)
+}
+
+bat.avg(baseball)
+
+avgBoot <- boot(data=baseball, statistic = bat.avg, R=1200, stype="i")
+
+# print original measure and estimates of bias and standard error
+avgBoot
+
+# print the confidence interval
+boot.ci(avgBoot, conf=.95, type="norm")
+
+ggplot() +
+  geom_histogram(aes(x=avgBoot$t), fill="grey", color="grey") +
+  geom_vline(xintercept = avgBoot$t0 + c(-1, 1) * 2 * sqrt(var(avgBoot$t)),
+             linetype=2)
+
+# 21.5 Stepwise Variable Selection
+
+nullModel <- lm(ValuePerSqFt ~ 1, data=housing)
+fullModel <- lm(ValuePerSqFt ~ Units + SqFt*Boro + Boro*Class, data=housing)
+
+# try different modesl
+# start with nullModel
+# do not go above fullModel
+# work in both direction
+houseStep <- step(nullModel,
+                  scope=list(lower=nullModel, upper=fullModel),
+                  direction="both")
+houseStep
+
+```
+

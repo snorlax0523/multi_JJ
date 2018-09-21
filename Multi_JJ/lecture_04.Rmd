@@ -1,0 +1,748 @@
+---
+title: "lecture_04"
+author: "JJ"
+date: "2018년 9월 7일"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+```{r}
+##reshape2 패키지
+head(Aid_00s)
+
+#DB의 경우 행을 추가하기 위해서는 insert문을 사용하면 되지만 열을 추가하기 위해서는 테이블 구조를 바꾸는 alter table문을 써야하기 때문에 reshape2는 강력한 기능이다.
+
+library(reshape2)
+
+#id로 지정한 것은 칼럼을 따라가고, var와 val로 지정한 것은 칼럼의 값을 토대로 새로운 칼럼을 만듦.
+melt00<-melt(Aid_00s, id.vars = c("Country.Name", "Program.Name"),variable.name = "Year", value.name = "Dollars")
+
+tail(melt00)
+
+library(scales)
+library(stringr)
+library(ggplot2)
+library(useful)
+
+#Year 열에서 앞의 FY를 제거해 숫자로 변경
+melt00$Year<-as.numeric((str_sub(melt00$Year,3,6)))
+
+#데이터를 연도에 따라서 집계
+meltAgg<-aggregate(Dollars~Program.Name+Year, data=melt00,sum, na.rm=TRUE)
+
+#프로그램 이름에서 앞의 10 문자만 유지한다.
+#다음 플롯을 그린다.
+
+meltAgg$Program.Name<-str_sub(meltAgg$Program.Name, start=1, end=10)
+
+basic_p<-ggplot(meltAgg,aes(Year, Dollars))
+
+basic_p+geom_line(aes(group=Program.Name))+facet_wrap(~Program.Name)+scale_x_continuous(breaks=seq(from=2000, to=2009, by=2))+theme(axis.text.x = element_text(angle=90, vjust=1, hjust=0)) + scale_y_continuous(labels = multiple_format(extra=dollar,multiple="B"))
+
+
+##dcast
+
+#첫 번째 인자는 주조에 사용될 데이터, 두 번째 인자는 포뮬러: 왼쪽에는 열로 남아 있어야 하는 열들, 오른쪽은 열 이름이 도야 하는 열들, 세 번째 인자는 새로운 열들로 뿌려질 값을 담고 있는 열의 이름을 문자열로 알려줌.
+cast00 <- dcast(melt00, Country.Name + Program.Name ~ Year,
+                value.var = "Dollars")
+head(cast00)
+
+#15.타이디버스로 데이터 재구조화
+#dplyr 패키지 로딩
+library(dplyr)
+library(tibble)
+
+#2개의 열을 가진 티블 생성
+sportLeague<-tibble(sport=c("Hockey","Baseball","Football"),league=c("NHL","MLB","NFL"))
+
+#하나의 열을 가진 티블 생성
+trophy<-tibble(trophy=c("Stanely Cup","Commissioner's Trophy","Vince Lombardi Trophy"))
+
+#하나의 티블로 결합
+trophies1<-bind_cols(sportLeague,trophy)
+
+
+trophies2 <- tribble(
+  ~sport, ~league, ~trophy,
+  "Basketball", "NBA", "Larry O'Brien Championship Trophy",
+  "Golf", "PGA", "Wanamaker Trophy"
+)
+
+trophies <- bind_rows(trophies1, trophies2)
+
+trophies
+
+##dplyr을 사용한 조인
+library(readr)
+
+colorsURL<-"https://www.jaredlander.com/data/DiamondColors.csv"
+
+diamondColors<-read_csv(colorsURL)
+
+diamondColors
+
+data(diamonds, package = "ggplot2")
+
+unique(diamonds$color)
+
+left_join(diamonds, diamondColors, by=c("color"="Color"))
+#factor가 numeric과 충돌하면 문제가 생긴다.
+
+left_join(diamonds, diamondColors, by=c("color"="Color"))%>%select(carat,color,price,Description, Details)
+
+left_join(diamonds, diamondColors, by=c('color'="Color"))%>%distinct(color,Description)
+
+diamondColors%>%distinct(Color,Description)
+
+right_join(diamonds, diamondColors, by=c('color'='Color'))%>%nrow
+
+diamonds%>%nrow
+
+
+#엑셀에 있는 vlookup과 매우 유사하다.
+
+all_equal(left_join(diamonds, diamondColors, by=c('color'='Color')),inner_join(diamonds,diamondColors, by=c('color'='Color')))
+
+all_equal(left_join(diamonds, diamondColors, by=c('color'='Color')),inner_join(diamonds,diamondColors, by=c('color'='Color')))
+
+all_equal(right_join(diamonds, diamondColors, by=c('color'='Color')),full_join(diamonds,diamondColors, by=c('color'='Color')))
+
+#오른쪽 테이블과 매칭되는 행에 대해 왼쪽 테이블의 행의 첫 행들을 반환한다.
+semi_join(diamondColors, diamonds, by = c("Color"="color"))
+
+#왼쪽 테이블 행에서 매칭되지 않는 오른쪽 테이블의 행을 반환한다.
+anti_join(diamondColors, diamonds, by=c('Color'='color'))
+
+#세미조인이나 안티조인으로 얻을 수 있는 결과는 filter나 unique 함수를 사용해도 같은 결과를 얻을 수 있다.
+
+diamondColors%>%filter(Color%in%unique(diamonds$color))
+
+##데이터 포맷 변환
+library(readr)
+emotion<-read_tsv("https://www.jaredlander.com/data/reaction.txt")
+emotion
+
+library(tidyr)
+#gather함수는 reshape2의 melt함수와 유사하다. 그리고 롱폼으로 만들어준다.
+emotion%>%gather(key=Type, value=Measurement, Age, BMI, React, Regulate)
+
+#ID기준으로 정렬
+emotionLong<-emotion%>%gather(key=Type, value=Measurement, Age, BMI, React, Regulate)%>%arrange(ID)
+
+emotionLong
+
+emotion %>% gather(key=Type, value = Measurement, -ID, -Test, -Gender)
+
+#같은지 확인
+identical(emotion%>%gather(key=Type, value=Measurement, Age, BMI, React, Regulate), emotion %>% gather(key=Type, value = Measurement, -ID, -Test, -Gender))
+
+#와이드폼으로 만든다.
+emotionLong %>% spread(key=Type, value = Measurement)
+
+#16.문자열 처리
+
+##paste 함수
+
+#기본적으로 공백이 들어간다.
+paste("Hello", "Jared","and others")
+
+#구분자로 /를 사용한 경우
+paste("Hello", "Jared","and others", sep = "/")
+
+#같은 길이라면 일대일 대응
+paste(c("Hello", "Hey", "Howdy"), c("Jared", "Bob", "David"))
+
+#다른 길이라면 순환 대응
+paste("Hello", c("Jared", "Bob", "David"))
+
+#순환 대응의 끝판왕
+paste("Hello", c("Jared", "Bob", "David"), c("Goodbye", "Seeya"))
+
+vectorOfText <- c("Hello", "Everyone", "out there", ".")
+
+#여러 문자열로 구성된 벡터의 경우 collapse를 통해 하나의 문자열로 만들 수 있다.
+paste(vectorOfText, collapse = " ")
+paste(vectorOfText)
+
+paste(vectorOfText, collapse = "*")
+
+
+##sprintf 함수
+#출력 안에 변수를 섞어서 사용할 때 아주 유용하다.
+person<-"Jared"
+partySize<-"eight"
+waitTime<-25
+
+paste("Hello ", person, ", your party of ", partySize, "will be seated in ", waitTime, " minutes.", sep="")
+
+sprintf("Hello %s, your party of %s will be seated in %s minutes", person, partySize, waitTime)
+sprintf("Hello %s, your party of %s will be seated in %s minutes", c("Jared", "Bob"), c("eight", 16, "four", 10), waitTime)
+
+##텍스트 추출
+#stringr을 사용하면 편리하다.
+library(XML)
+library(stringr)
+
+theURL<-"http://www.loc.gov/rr/print/list/057_chron.html"
+
+presidents<-readHTMLTable(theURL, which = 3, as.data.frame = TRUE, skip.rows = 1, header = TRUE, stringsAsFactors=FALSE)
+
+head(presidents)
+
+tail(presidents$YEAR)
+
+presidents<-presidents[1:64,]
+
+yearList<-str_split(string=presidents$YEAR,pattern = "-")
+
+head(yearList)
+
+#취임기간을 데이터프레임 형태의 행렬로 만든다.
+yearMatrix <- data.frame(Reduce(rbind, yearList))
+
+names(yearMatrix) <- c("Start", "Stop")
+
+presidents <- bind_cols(presidents, yearMatrix)
+
+presidents <- presidents %>% 
+  mutate(Start = as.numeric(as.character(Start)),
+         Stop = as.numeric(as.character(Stop))) 
+
+str(presidents)
+
+#처음 3개의 문자열
+presidents %>% 
+  mutate(PRESIDENT = str_sub(PRESIDENT, start=1L, end=3L))
+
+#4 번째에서 8 번째 문자열 얻기
+presidents %>% 
+  mutate(PRESIDENT = str_sub(PRESIDENT, start=4L, end=8L))
+
+#임기가 1로 끝나는 해에 시작했던 대통령 확인
+presidents %>% 
+  filter(str_sub(Start, start=4, end=4) == 1) %>% 
+  select(YEAR, PRESIDENT, Start, Stop)
+
+##정규 표현식
+#John이 이름에 포함돼 있으면 TRUE/FALSE 반환
+johnPos <- str_detect(presidents$PRESIDENT, pattern = "John")
+
+presidents[johnPos, c("YEAR", "PRESIDENT", "Start", "Stop")]
+
+presidents %>% 
+  filter(str_detect(PRESIDENT, pattern = "John")) %>% 
+  select(YEAR, PRESIDENT, Start, Stop)
+
+#정규표현식은 대소문자를 구분하기 때문에 패턴에 대해 ignore.case옵션을 지정할 필요가 있다.
+badSearch <- str_detect(presidents$PRESIDENT, "john")
+goodSearch <- str_detect(presidents$PRESIDENT, regex("john", ignore_case = TRUE))
+
+#대소문자 구분
+sum(badSearch)
+#대소문자 무시
+sum(goodSearch)
+
+#온라인에서 RData파일을 가져오는 것은 load와 close를 통해 가능하다.
+con <- url("http://www.jaredlander.com/data/warTimes.rdata")
+load(con)
+close(con)
+
+head(warTimes, 10)
+
+#하나는 구분자로 다른 하나는 하이픈으로 사용되었다. 정보를 얻기 전에 전처리를 해줘야한다.
+warTimes[str_detect(string = warTimes, pattern = "-")]
+
+#그래서 ACAEA와 - 을 찾아서 전처리하는 과정
+#n=2의 경우 2개로 그룹핑 한다는 의미
+theTime<-str_split(string = warTimes, pattern = "(ACAEA) | -", n=2)
+head(theTime)
+
+#- 이 들어간 경우도 확인
+which(str_detect(string=warTimes, pattern = "-"))
+
+theTime[[147]]
+theTime[[150]]
+
+theStart<-sapply(theTime, FUN=function(x) x[1])
+
+head(theStart)
+#구분자 주변에 존재하는 공백을 없애준다.
+theStart<-str_trim(theStart)
+
+#January가 있으면 추출하고 그렇지 않으면 NA로 채운다.
+str_extract(string = theStart, pattern = "January")
+
+#"January"가 발견된 요소들만 반환
+theStart[str_detect(string=theStart, pattern = "January")]
+
+#[0-9]어떤 하나의 숫자를 검색하기 위한 정규식
+#하나의 행에서 4개의 숫자가 있는 경우
+head(str_extract(string=theStart, "[0-9][0-9][0-9][0-9]"),20)
+
+#\\d는 [0-9]의 단축형, 자릿수 검색을 위해서는 {4} 과 같은 표현을 쓴다.
+head(str_extract(string = theStart, "\\d{4}"),20)
+
+#숫자가 1번, 2번, 3번 나오는 경우 조사
+str_extract(string = theStart, "\\d{1,3}")
+
+#텍스트의 시작과 끝을 표현해주는 정규식. ^ $
+#텍스트의 시작 부분에서 4개의 숫자를 추출한다.
+head(str_extract(theStart, pattern="^\\d{4}"), 30)
+#텍스트의 끝에서 4개의 숫자를 추출한다.
+head(str_extract(theStart, pattern="\\d{4}$"), 30)
+#텍스트의 시작과 끝에서 4개의 숫자를 추출한다.
+head(str_extract(theStart, pattern="^\\d{4}$"), 30)
+
+#첫 번째 숫자를 문자 "x"로 교체
+head(str_replace(string=theStart, pattern = "\\d", replacement="x"),30)
+
+#모든 숫자를 "x"로 교체
+#"7"->"x", "382"->"xxx"라는 의미
+head(str_replace_all(string=theStart, pattern = "\\d", replacement="x"),30)
+
+#길이가1~4까지 숫자를 "x"로 교체
+#"7"->"x", "382"->"x"
+head(str_replace_all(string=theStart, pattern = "\\d{1,4}", replacement="x"),30)
+
+#HTML 명령을 가진 벡터 생성
+commands <- c("<a href=index.html>The Link is here</a>",
+              "<b>This is bold text</b>")
+
+#HTML 태그 사이의 텍스트를 얻는다.
+# (.+?)의 콘텐츠를 \\1을 사용해서 치환한다.
+str_replace(string=commands, pattern="<.+?>(.+?)<.+>",
+            replacement="\\1")
+#R 자체만의 정규 표현식을 처리하는 방법을 알고 싶을 때
+?regex
+
+#17.확률분포
+##정규분포
+#평균이 0, 표준편차가 1인 정규분포(표준정규) 분포를 따르는 10개의 난수 얻기
+rnorm(n=10)
+
+#평균이 100, 표준편차 20인 분포에서 10개의 난수 얻기
+rnorm(n=10, mean=100, sd=20)
+
+randNorm10<-rnorm(n=10)
+
+dnorm(randNorm10)
+
+dnorm(c(-1,0,1))
+
+#확률 밀도 함수 그리기
+randNorm <- rnorm(3000)
+randDensity <- dnorm(randNorm)
+
+randTable <- tibble(randNorm, randDensity)
+
+ggplot(randTable, aes(x = randNorm, y = randDensity)) +
+  geom_point() + labs(x = "Random Normal Variables", 
+                      y = "Density")
+
+#pnorm함수는 누적 확률을 반환한다.
+pnorm(randNorm10)
+pnorm(c(-3, 0, 3))
+pnorm(-1)
+
+pnorm(1) - pnorm(0)
+pnorm(1) - pnorm(-1)
+
+#기본 정규분포의 그래프
+p <- ggplot(data.frame(x=randNorm, y=randDensity)) + aes(x =x, y = y) +
+  geom_line() + labs(x = "x", y = "Density")
+
+#곡선 아래에 색을 추가하기 위해서 먼저 해당 영역을 그릴 필요가 있다.
+#아주 왼쪽에서 -1까지 연속된 숫자를 생성한다.
+neg1Seq<-seq(from=min(randNorm),to=-1,by=.1)
+
+#연속된 값과 그 값에 해당하는 밀도값을 결합해 데이터 프레임을 만든다.
+lessThanNeg1<-data.frame(x=neg1Seq, y=dnorm(neg1Seq))
+
+head(lessThanNeg1)
+
+#이렇게 만든 것을 가장 왼쪽 값과 오른쪽 값을 추가해 결합한다.
+#이 두 지정의 높이는 0으로 한다.
+lessThanNeg1<-rbind(c(min(randNorm),0), lessThanNeg1, c(max(lessThanNeg1$x),0))
+
+#색칠할 부분은 다각형으로 정의한다.
+p+geom_polygon(data = lessThanNeg1, aes(x=x, y=y))
+
+#앞에서와 같이 -1에서 1까지의 연속된 수를 만든다.
+neg1Pos1Seq<-seq(from=-1, to=1, by=.1)
+
+#해당 값과 그 값에 해당하는 밀도값을 결합해 데이터 프레임을 만든다.
+neg1To1<-data.frame(x=neg1Pos1Seq, y=dnorm(neg1Pos1Seq))
+neg1To1
+
+#왼쪽, 오른쪽 끝 점을 명확히 한다. 높이는 0이다.
+neg1To1<-rbind(c(min(neg1To1$x),0),neg1To1, c(max(neg1To1$x),0))
+
+p+geom_polygon(data=neg1To1, aes(x=x,y=y))
+
+#include_graphics("image/fig17_2.png")
+
+
+#pnorm 함수의 반대는 qnorm이다. 누적확률값을 주면 해당하는 분위 수를 반환한다.
+randNorm10
+qnorm(pnorm(randNorm10))
+
+all.equal(randNorm10, qnorm(pnorm(randNorm10)))
+
+##이항분포
+#성공횟수를 반환한다.
+rbinom(n=1, size=10, prob=0.4)
+
+rbinom(n = 1, size = 10, prob = .4)
+
+rbinom(n = 5, size = 10, prob = .4)
+
+rbinom(n = 10, size = 10, prob = .4)
+
+#베르누이 난수로 바뀌게 된다.
+rbinom(n=1, size=1, prob=.4)
+rbinom(n=5, size=1, prob=.4)
+rbinom(n=10, size=1, prob=.4)
+
+#이항분포 시각화, 관찰횟수 10000회, 시행횟수 10회, 확률은 0.3
+binomData <- tibble(Successes=rbinom(n=10000, size=10, prob=.3))
+
+ggplot(binomData, aes(x=Successes)) +
+  geom_histogram(binwidth = 1)
+
+binom5 <- tibble(Successes=rbinom(n=10000, size=5, prob=.3), Size=5)
+dim(binom5)
+
+binom10 <- tibble(Successes=rbinom(n=10000, size=10, prob=.3), Size=10)
+
+dim(binom10)
+
+head(binom10)
+
+binom100 <- tibble(Successes=rbinom(n=10000, size=100, prob=.3), Size=100)
+binom1000 <- tibble(Successes=rbinom(n=10000, size=1000, prob=.3), Size=1000)
+
+binomAll <- bind_rows(binom5, binom10, binom100, binom1000)
+
+dim(binomAll)
+
+head(binomAll)
+tail(binomAll)
+
+#정규분포를 따라간다.
+ggplot(binomAll, aes(x=Successes)) + geom_histogram() +
+  facet_wrap(~Size, scales = "free")
+
+#dbinom과 pbinom함수는 이항분포에 대한 밀도와 누적 확률값을 반환한다.
+dbinom(x=3, size=10, prob=.3)
+pbinom(q=3, size=10, prob=.3)
+dbinom(x=1:10, size=10, prob=.3)
+pbinom(q=1:10, size=10, prob=.3)
+
+
+#해당 분포에서 성공횟수를 의미한다.
+qbinom(p=.3, size=10, prob=.3)
+qbinom(p=c(.3, .35, .4, .5, .6), size=10, prob=.3)
+
+##포아송 분포
+#람다 값이 커질수록 포아송 분포 또한 정규분포에 가까워진다.
+#5개의 서로 다른 포아송 분포에서 10000개의 랜덤 카운트를 생성한다.
+pois1<-rpois(n=1000, lambda=1)
+pois2<-rpois(n=1000, lambda=2)
+pois5<-rpois(n=1000, lambda=5)
+pois10<-rpois(n=1000, lambda=10)
+pois20<-rpois(n=1000, lambda=20)
+
+pois<-data.frame(Lambda.1=pois1, Lambda.2=pois2 , Lambda.3=pois5, Lambda.4=pois10, Lambda.5=pois20)
+
+#reshape2를 이용하여 플롯을 준비함
+#library(reshape2)
+
+#데이터를 롱폼으로
+pois<-melt(data=pois, variable.name = "Lambda",value.name = "x")
+
+#새로운 열 이름을 정돈하기 위해서 stringr패키지 로딩
+#library(stringr)
+
+#lambda 값만을 보여주기 위해서 Lambdam를 정리한다.
+pois$Lambda<-as.factor(as.numeric(str_extract(string = pois$Lambda, pattern = "\\d+")))
+
+head(pois)
+
+tail(pois)
+
+#람다 값에 따라서 각각의 히스토그램을 만들어보기
+library(ggplot2)
+ggplot(pois,aes(x=x))+geom_histogram(binwidth = 1)+facet_wrap(~Lambda)+ggtitle("Probability Mass Function")
+
+#밀도 곡선으로 정규 분포를 따라가는 것을 보여주는 그래프
+ggplot(pois, aes(x=x)) +
+  geom_density(aes(group=Lambda, color=Lambda, fill=Lambda), 
+               adjust = 4, alpha = 1/2) +
+  scale_color_discrete() + scale_fill_discrete() +
+  ggtitle("Probability Mass Function")
+
+#18.기초통계학
+##요약 통계
+x<-sample(x=1:100, size = 100, replace = TRUE)
+
+x
+
+mean(x)
+
+y<-x
+
+y[sample(x=1:100, size=20, replace = FALSE)]<-NA
+
+#NA가 포함되어 있으면 NA가 나온다.
+mean(y)
+
+mean(y, na.rm = TRUE)
+
+grades<-c(95,72,87,65)
+
+weights<-c(1/2,1/4,1/8,1/8)
+
+mean(grades)
+
+weighted.mean(x=grades, w=weights)
+
+#분산
+var(x)
+
+#수식으로 확인하기
+sum((x - mean(x)) ^ 2) / (length(x) - 1)
+
+#표준편차: 분산을 제곱해서 구하는 방법
+sqrt(var(x))
+
+#표준편차
+sd(x)
+
+#표준편차도 마찬가지로 NA가 있으면 NA가 나온다.
+sd(y)
+
+sd(y, na.rm = TRUE)
+
+#최소, 최대, 중앙값 모음집 
+min(x)
+max(x)
+median(x)
+#NA제거 필요함
+min(y)
+
+min(y, na.rm = TRUE)
+
+#최대최소중앙분기NA갯수 모두 계산해주는 아주 좋은 함수 summary!!!!!!!!
+summary(x)
+
+summary(y)
+
+#quantile을 통한 사분위수 계산
+quantile(x, probs=c(.25, .75))
+
+#NA는 허락 안 함!
+quantile(y, probs=c(.25, .75))
+
+quantile(y, probs=c(.25, .75), na.rm = TRUE)
+
+quantile(x, probs=c(.1, .25, .5, .75, .99))
+
+#library(ggplot2)
+head(economics)
+
+#상관관계
+cor(economics$pce, economics$psavert)
+
+#수식을 이용한 상관계수 구하기
+
+#필요한 변수 할당
+xPart <- economics$pce - mean(economics$pce)
+yPart <- economics$psavert - mean(economics$psavert)
+
+nMinusOne <- nrow(economics) - 1
+xSD <- sqrt(sum(xPart ^2) / nMinusOne)
+ySD <- sqrt(sum(yPart ^2) / nMinusOne)
+
+#공식에 대입하여 계산
+sum(xPart * yPart) / (nMinusOne * xSD * ySD)
+
+#여러 변수 간의 상관계수를 한꺼번에 계산할 때
+cor(economics[,c(2,4:6)])
+
+#install.packages("GGally")
+GGally::ggpairs(economics[,c(2,4:6)])+ggplot2::theme(axis.text = ggplot2::element_text(size = 2))
+
+#그래프 작성시 단일 분포 또한 표시해준다.
+#library(reshape2)
+#library(scales)
+#상관행렬 만들기
+econCor<-cor(economics[,c(2,4:6)])
+
+econMelt<-melt(econCor, varnames = c("x","y"), value.name = "Correlation")
+
+#상관계수에 따라서 정렬
+econMelt<-econMelt[order(econMelt$Correlation),]
+
+#데이터 확인
+econMelt
+##ggplot으로 플롯팅
+#x,y를 x,y에스테틱으로 놓고 초기화
+ggplot(econMelt, aes(x=x,y=y))+
+  #상관계수에 기반해 색깔을 입힌 타일을 만듦.
+  geom_tile(aes(fill=Correlation))+
+  #3단계의 색을 fill 그라디언트를 만듦.
+  #가이드에서 틱을 없애고, 바 높이를 10행으로 지정
+  #limits는 스케일을 -1에서1 사이의 값으로 채우도록 제한
+  scale_fill_gradient2(low=muted("red"),mid="white",high="steelblue", guide =guide_colourbar(ticks=FALSE, barheight = 10), limits=c(-1,1))+
+  #minimal테마를 사용해 필요 없는 것을 제거
+  theme_minimal()+
+  #x,y
+  labs(x=NULL,y=NULL)
+
+theMat <- tibble(m = c(9, 9, NA, 3, NA, 5, 8, 1, 10, 4),
+                 n = c(2, NA, 1, 6, 6, 4, 1, 1, 6, 7),
+                 p = c(8, 4, 3, 9, 10, NA, 3, NA, 9, 9),
+                 q = c(10, 10, 7, 8, 4, 2, 8, 5, 5, 2),
+                 r = c(1, 9, 7, 6, 5, 6, 2, 7, 9, 10))
+
+cor(theMat, use="everything")
+
+cor(theMat, use="all.obs")
+cor(theMat, use="complete.obs")
+cor(theMat, use="na.or.complete")
+
+identical(cor(theMat, use="complete.obs"),
+          cor(theMat, use="na.or.complete")
+)
+
+cor(theMat[c(1, 4, 7, 9, 10), ])
+
+cor(theMat, use = "pairwise.complete.obs")
+cor(theMat[, c("m", "n")], use="complete.obs")
+
+cor(theMat[, c("m", "p")], use="complete.obs")
+
+data(tips, package="reshape2")
+head(tips)
+
+ggpairs(tips)
+
+# install.packages("RXKCD")
+library(RXKCD)
+
+getXKCD(which="552")
+
+cov(economics$pce, economics$psavert)
+cov(economics[, c(2, 4:6)])
+
+# sum(xPart * yPart) / nMinusOne
+
+identical(cov(economics$pce, economics$psavert),
+          cor(economics$pce, economics$psavert) *
+            sd(economics$pce) * sd(economics$psavert))
+
+
+##t-test
+head(tips)
+
+unique(tips$sex)
+
+unique(tips$day)
+
+##단일-표본 t 검정
+
+t.test(tips$tip, alternative = "two.sided", mu=2.50)
+
+randT <- rt(30000, df=NROW(tips)-1)
+tipTTest <- t.test(tips$tip, alternative="two.sided", mu=2.50)
+
+ggplot(data.frame(x=randT)) +
+  geom_density(aes(x=x), fill = "grey", color="grey") +
+  geom_vline(xintercept = tipTTest$statistic) +
+  geom_vline(xintercept = mean(randT) + c(-2, 2) * sd(randT), linetype = 2)
+
+t.test(tips$tip, alternative="greater", mu=2.5)
+
+##이표본 검정의 경우 등분산일 경우 가능하고 등분산이 아니라면 웰치 이표본 검정을 통해 두 표본의 평균을 비교해볼 수 있다.
+#각 그룹의 분산을 먼저 계산한다.
+#성별의 레벨에 따른 분산을 계산한다.
+
+aggregate(tip~sex, data=tips, var)
+
+#P값이 작아서 귀무가설이 기각된다. 정규분포가 아니다.
+#귀무가설이? 정규분포랑 차이가 없다?
+#대립가설이? 정규분포랑 차이가 있다?
+shapiro.test(tips$tip)
+
+shapiro.test(tips$tip[tips$sex=="Female"])
+
+shapiro.test(tips$tip[tips$sex=="Male"])
+
+ggplot(tips,aes(x=tip,fill=sex))+geom_histogram(binwidth = .5,alpha=1/2)
+
+#정규분포를 따르지 않기 때문에...안사리-브래들리 검정
+ansari.test(tip~sex,tips)
+#p값이 0.376으로 귀무가설 채택...분산에 차이가 없다.->등분산이다.
+
+#var.equal=TRUE로 놓고 이표본t-검정 실행
+#val.equal=FALSE로 놓고 실행하면 웰치 테스트 실행
+
+t.test(tip~sex, data=tips, var.equal=TRUE)
+#p값이 0.05보다 크기 때문에 귀무가설 기각(같지 않다. 라는 내용을 기각)
+
+library(plyr)
+tipSummary<-ddply(tips,"sex",summarize, tip.mean=mean(tip),tip.sd=sd(tip),
+                  Lower=tip.mean-2*tip.sd/sqrt(NROW(tip)),
+                  Upper=tip.mean+2*tip.sd/sqrt(NROW(tip)))
+
+tipSummary
+
+ggplot(tipSummary, aes(x=tip.mean, y=sex))+geom_point()+geom_errorbarh(aes(xmin=Lower,xmax=Upper),height=0.2)
+
+#Paired t 검정
+data(father.son, package = "UsingR")
+
+library(tidyverse)
+
+head(father.son)
+
+t.test(father.son$fheight, father.son$sheight, paired = TRUE)
+
+heightDiff <- father.son$fheight - father.son$sheight
+
+ggplot(father.son, aes(x = fheight - sheight)) +
+  geom_density() +
+  geom_vline(xintercept = mean(heightDiff)) +
+  geom_vline(xintercept = mean(heightDiff) + 
+               2*c(-1, 1)*sd(heightDiff) / sqrt(nrow(father.son)), linetype = 2) 
+
+#그룹이 3개 이상일 때 아노바 분석을 꼭 사용해서 집단 간 차이가 있는지 살펴볼 것 
+
+data(tips, package="reshape2")
+
+tipAnova <- aov(tip ~ day - 1, tips)
+tipIntercept <- aov(tip ~ day, tips)
+
+tipAnova$coefficients
+tipIntercept$coefficients
+
+summary(tipAnova)
+
+tipsByDay <- tips %>% 
+  group_by(day) %>% 
+  summarize(tip.mean = mean(tip),
+            tip.sd = sd(tip),
+            Length=NROW(tip),
+            tfrac=qt(p=.90, df=Length-1),
+            Lower=tip.mean - tfrac * tip.sd / sqrt(Length),
+            Upper=tip.mean + tfrac * tip.sd / sqrt(Length))
+
+ggplot(tipsByDay, aes(x=tip.mean, y=day))+geom_point()+geom_errorbarh(aes(xmin=Lower,xmax=Upper), height=0.3)
+
+nrow(tips)
+NROW(tips)
+
+nrow(tips$tip)
+NROW(tips$tip)
+
+```
